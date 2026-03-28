@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlgoViz — Data Structures & Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div id="sidebar-header">
+      <span class="logo">AlgoViz</span>
+    </div>
+    <div id="sidebar-nav">
+      <!-- Sorting -->
+      <div class="nav-section" id="sec-sorting">
+        <div class="nav-item" onclick="toggleSection('sec-sorting')">
+          <span class="icon">📊</span> Sorting
+          <span class="nav-arrow">▶</span>
+        </div>
+        <div class="nav-children">
+          <div class="nav-child" onclick="loadAlgo('bubble')">Bubble Sort</div>
+          <div class="nav-child" onclick="loadAlgo('selection')">Selection Sort</div>
+          <div class="nav-child" onclick="loadAlgo('insertion')">Insertion Sort</div>
+          <div class="nav-child" onclick="loadAlgo('merge')">Merge Sort</div>
+          <div class="nav-child" onclick="loadAlgo('quick')">Quick Sort</div>
+          <div class="nav-child" onclick="loadAlgo('heap')">Heap Sort</div>
+          <div class="nav-child" onclick="loadAlgo('counting')">Counting Sort</div>
+          <div class="nav-child" onclick="loadAlgo('radix')">Radix Sort</div>
+        </div>
+      </div>
+      <!-- Searching -->
+      <div class="nav-section" id="sec-search">
+        <div class="nav-item" onclick="toggleSection('sec-search')">
+          <span class="icon">🔍</span> Searching
+          <span class="nav-arrow">▶</span>
+        </div>
+        <div class="nav-children">
+          <div class="nav-child" onclick="loadAlgo('linear-search')">Linear Search</div>
+          <div class="nav-child" onclick="loadAlgo('binary-search')">Binary Search</div>
+          <div class="nav-child" onclick="loadAlgo('jump-search')">Jump Search</div>
+        </div>
+      </div>
+      <!-- Data Structures -->
+      <div class="nav-section" id="sec-ds">
+        <div class="nav-item" onclick="toggleSection('sec-ds')">
+          <span class="icon">🗂️</span> Data Structures
+          <span class="nav-arrow">▶</span>
+        </div>
+        <div class="nav-children">
+          <div class="nav-child" onclick="loadAlgo('array-ds')">Array</div>
+          <div class="nav-child" onclick="loadAlgo('stack-ds')">Stack</div>
+          <div class="nav-child" onclick="loadAlgo('queue-ds')">Queue</div>
+          <div class="nav-child" onclick="loadAlgo('singly-ll')">Singly Linked List</div>
+          <div class="nav-child" onclick="loadAlgo('doubly-ll')">Doubly Linked List</div>
+          <div class="nav-child" onclick="loadAlgo('circular-ll')">Circular Linked List</div>
+          <div class="nav-child" onclick="loadAlgo('ordered-ll')">Ordered Linked List</div>
+        </div>
+      </div>
+      <!-- Trees -->
+      <div class="nav-section" id="sec-tree">
+        <div class="nav-item" onclick="toggleSection('sec-tree')">
+          <span class="icon">🌳</span> Trees
+          <span class="nav-arrow">▶</span>
+        </div>
+        <div class="nav-children">
+          <div class="nav-child" onclick="loadAlgo('bst')">Binary Search Tree</div>
+          <div class="nav-child" onclick="loadAlgo('avl')">AVL Tree</div>
+          <div class="nav-child" onclick="loadAlgo('binary-tree')">Binary Tree Traversal</div>
+          <div class="nav-child" onclick="loadAlgo('heap-tree')">Heap Tree</div>
+        </div>
+      </div>
+      <!-- Graphs -->
+      <div class="nav-section" id="sec-graph">
+        <div class="nav-item" onclick="toggleSection('sec-graph')">
+          <span class="icon">🕸️</span> Graphs
+          <span class="nav-arrow">▶</span>
+        </div>
+        <div class="nav-children">
+          <div class="nav-child" onclick="loadAlgo('bfs')">BFS</div>
+          <div class="nav-child" onclick="loadAlgo('dfs')">DFS</div>
+          <div class="nav-child" onclick="loadAlgo('dijkstra')">Dijkstra</div>
+        </div>
+      </div>
+      <!-- Modes -->
+      <div class="nav-section-title">Modes</div>
+<div class="nav-item" onclick="openQuiz()"><span class="icon">🎯</span> Practice Mode</div>    </div>
+  </nav>
+  <!-- MAIN -->
+  <div id="main">
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <button id="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Show/hide sidebar">☰</button>
+      <button id="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div id="algo-title">Bubble Sort</div>
+      <select id="lang-select" onchange="updateCode()">
+        <option value="cpp">C++</option>
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="csharp">C#</option>
+      </select>
+      <button id="dark-toggle" onclick="toggleTheme()">☀️ Light</button>
+    </div>
+    <!-- CONTENT -->
+    <div id="content">
+      <!-- STATS BAR — contains step counter, fullscreen, and explain -->
+      <div id="viz-overlay">
+        <div class="viz-stat">
+          <div class="viz-stat-item">Comparisons: <span id="stat-cmp">0</span></div>
+          <div class="viz-stat-item">Swaps: <span id="stat-swp">0</span></div>
+          <div class="viz-stat-item">Steps: <span id="stat-stp">0</span></div>
+          <div class="viz-stat-sep"></div>
+          <div class="viz-stat-item">Size: <span id="stat-size">20</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+          <span id="fs-hint" style="display:none;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:#f59e0b;white-space:nowrap;border:1.5px solid #f59e0b44;padding:4px 12px 4px 10px;border-radius:20px;letter-spacing:0.4px;cursor:default;background:rgba(245,158,11,0.08);">Best viewed in fullscreen &nbsp;🖥️</span>
+          <button id="fs-btn" onclick="enterFullscreen()" title="Fullscreen visualization">⛶ Fullscreen</button>
+           <button id="info-btn" style="display:none;" onclick="openInfo()">ℹ️ Info</button>
+          <button id="explain-btn" onclick="openExplain()" title="How this algorithm works">💡 Explain</button>
+        </div>
+      </div>
+      <!-- COMPLEXITY PANEL -->
+      <div id="cx-panel">
+        <!-- Sort items are direct flex children — no wrapper div -->
+        <div class="cx-block" id="cx-sort-block-1" style="display:none">
+          <span class="cx-lbl" id="cx-lbl-1">Best</span>
+          <span class="cx-val" id="cx-val-1">—</span>
+        </div>
+        <div class="cx-sep" id="cx-sep-1" style="display:none">|</div>
+        <div class="cx-block" id="cx-sort-block-2" style="display:none">
+          <span class="cx-lbl" id="cx-lbl-2">Average</span>
+          <span class="cx-val" id="cx-val-2">—</span>
+        </div>
+        <div class="cx-sep" id="cx-sep-2" style="display:none">|</div>
+        <div class="cx-block" id="cx-sort-block-3" style="display:none">
+          <span class="cx-lbl" id="cx-lbl-3">Worst</span>
+          <span class="cx-val cx-worst" id="cx-val-3">—</span>
+        </div>
+        <div class="cx-sep" id="cx-sep-3" style="display:none">|</div>
+        <div class="cx-block" id="cx-sort-block-space" style="display:none">
+          <span class="cx-lbl">Space</span>
+          <span class="cx-val cx-space" id="cx-space-val">O(1)</span>
+        </div>
+        <!-- DS mode: operation items inline -->
+        <div id="cx-ops-grid" style="display:none;flex-wrap:wrap;gap:0;align-items:center;"></div>
+        <span id="cx-space-ds" style="display:none;margin-left:8px;font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">Space: —</span>
+      </div>
+      <!-- VIZ PANEL — contains canvas + floating graph overlay -->
+      <div id="viz-panel">
+        <canvas id="main-canvas"></canvas>
+        <div id="viz-resize-handle" title="Drag to resize"></div>
+        <!-- Adjacency panel: floating overlay, shown only for graph algos -->
+        <button id="adj-toggle-btn" onclick="toggleAdjPanel()" title="Show/hide adjacency representation">📊 Adjacency</button>
+        <div id="adj-panel-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:1px">GRAPH REPRESENTATION</span>
+            <button onclick="toggleAdjPanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1">✕</button>
+          </div>
+          <div id="adj-panel"></div>
+        </div>
+      </div>
+      <!-- STEP EXPLANATION -->
+      <div id="step-box">
+        <span id="step-num">Step 0</span>
+        <span id="step-text">Press Start to begin visualization</span>
+      </div>
+      <!-- LEGEND -->
+      <div id="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--compare)"></div>Comparing</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--swap)"></div>Swapping</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--sorted)"></div>Sorted</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--pivot)"></div>Pivot</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--current)"></div>Current</div>
+      </div>
+      <!-- BOTTOM PANELS -->
+       <div id="bottom-resize-handle" class="resize-handle-horizontal" title="Drag to resize bottom panel"></div>
+      <div id="bottom-panels">
+        <!-- CODE COLUMN: header always visible, panel below it collapses -->
+        <div class="code-col">
+          <div id="code-panel-header">
+            <span>Code</span>
+            <span id="code-lang-badge" style="color:var(--accent3)">C++</span>
+            <button id="code-toggle-btn" onclick="toggleCodePanel()" title="Hide/show code panel">Hide Code</button>
+          </div>
+          <div id="code-panel">
+            <div id="code-content"></div>
+          </div>
+        </div>
+        <!-- CONTROL PANEL -->
+        <div id="ctrl-panel">
+          <div class="ctrl-group" id="ctrl-group-controls">
+            <div class="ctrl-label">Controls</div>
+            <div class="ctrl-btns">
+              <button class="btn primary" id="btn-start" onclick="ctrlStart()">▶ Start</button>
+              <button class="btn" id="btn-pause" onclick="ctrlPause()" disabled>⏸ Pause</button>
+              <button class="btn" id="btn-step-fwd" onclick="ctrlStepFwd()">⏩ Step</button>
+              <button class="btn" id="btn-step-bk" onclick="ctrlStepBack()">⏪ Back</button>
+              <button class="btn danger" onclick="ctrlReset()">↺ Reset</button>
+            </div>
+          </div>
+          <div class="ctrl-group" id="ctrl-group-speed">
+            <div class="ctrl-label">Speed</div>
+            <div class="range-wrap">
+              <input type="range" id="speed-range" min="1" max="10" value="5" oninput="updateSpeed(this.value)">
+              <span class="range-val" id="speed-val">5</span>
+            </div>
+          </div>  
+          <div class="ctrl-group">
+            <div class="ctrl-label" id="size-ctrl-label">Array Size</div>
+            <div class="range-wrap">
+            <input type="range" id="size-range" min="5" max="20" value="20" oninput="updateSize(this.value)">
+              <span class="range-val" id="size-val">20</span>
+            </div>
+          </div>
+          <div class="ctrl-group">
+            <div class="ctrl-label">Custom Input</div>
+            <input type="text" class="ctrl-input" id="custom-input" placeholder="e.g. 5,3,8,1,9" />
+            <button class="btn success" onclick="applyCustomInput()">Apply</button>
+          </div>
+          <div class="ctrl-group" id="ctrl-group-random">
+            <button class="btn" onclick="generateRandom()">🎲 Random Array</button>
+          </div>
+          <div class="ctrl-group">
+            <div class="ctrl-label">DS Operations</div>
+            <div id="ds-ops" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ALGORITHM EXPLANATION PANEL -->
+  <div id="explain-overlay" onclick="closeExplain()"></div>
+  <div id="explain-panel">
+    <button id="explain-close" onclick="closeExplain()">✕</button>
+    <h3 id="explain-title">Algorithm</h3>
+    <div id="explain-body"></div>
+  </div>
+  <!-- FULLSCREEN HUD — inside #main so it shares the same stacking context -->
+ <div id="fs-hud" style="display:none">
+  <button class="hud-btn primary" id="fs-hud-run-graph" style="display:none" onclick="runGraphAlgo()">▶ Run</button>
+  <button class="hud-btn primary" id="fs-hud-start" onclick="ctrlStart()">▶ Play</button>
+  <button class="hud-btn" id="fs-hud-pause" onclick="ctrlPause()" disabled>⏸ Pause</button>
+  <button class="hud-btn" onclick="ctrlStepFwd()">⏩ Step</button>
+  <button class="hud-btn" onclick="ctrlStepBack()">⏪ Back</button>
+  <button class="hud-btn danger" onclick="ctrlReset()">↺ Reset</button>
+  <div id="fs-hud-ll-ops" style="display:none;align-items:center;gap:4px;flex-wrap:nowrap;flex-shrink:0"></div>
+  <div class="hud-sep"></div>
+  <div class="hud-speed">
+    <span>Speed</span>
+    <input type="range" id="fs-speed" min="1" max="10" value="5"
+      oninput="updateSpeed(this.value);document.getElementById('speed-range').value=this.value;document.getElementById('speed-val').textContent=this.value;document.getElementById('fs-speed-val').textContent=this.value">
+    <span id="fs-speed-val">5</span>
+  </div>
+  <div class="hud-sep"></div>
+  <button class="hud-btn exit">✕ Exit Fullscreen</button>
+</div>
+  <!-- FULLSCREEN STEP INFO BAR -->
+  <div id="fs-step-info" style="display:none">Press Play or Step to begin</div>
+</div><!-- /#app -->
+<div id="quiz-overlay">
+  <div id="quiz-card">
+    <div class="quiz-q" id="quiz-q"></div>
+    <div class="quiz-options" id="quiz-opts"></div>
+    <div class="quiz-feedback" id="quiz-fb"></div>
+    <div style="display:flex; gap:10px; margin-top:20px; justify-content:center;">
+      <button class="btn primary" onclick="nextQuiz()">Next Question →</button>
+      <button class="btn" onclick="closeQuiz()">Close</button>
+    </div>
+  </div>
+</div>
+</div>
+<!-- Toast notification for invalid input -->
+<div id="toast-message" class="toast">Invalid index !</div>
+</body>
+</body>
+</html>

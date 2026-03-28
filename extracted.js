@@ -1,1025 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AlgoViz — Data Structures & Algorithms</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-/* ===== CSS VARIABLES ===== */
-:root {
-  --bg: #0a0a0f;
-  --surface: #12121a;
-  --surface2: #1a1a26;
-  --surface3: #22223a;
-  --border: #2a2a42;
-  --text: #e8e8f0;
-  --text-muted: #8888aa;
-  --accent: #6c63ff;
-  --accent2: #ff6584;
-  --accent3: #43d9ad;
-  --accent4: #f7c59f;
-  --yellow: #ffd166;
-  --compare: #ff6584;
-  --swap: #43d9ad;
-  --sorted: #6c63ff;
-  --pivot: #ffd166;
-  --current: #f7c59f;
-  --bar-default: #3d3d6b;
-  --cell-bg: #22223a;
-  --cell-text: #ffffff;
-  --cell-idx: #8888aa;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-head: 'Syne', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --sidebar-w: 240px;
-  --radius: 8px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-}
-.light {
-  --bg: #f4f4f8;
-  --surface: #ffffff;
-  --surface2: #f0f0f8;
-  --surface3: #e8e8f4;
-  --border: #d4d4e8;
-  --text: #1a1a2e;
-  --text-muted: #6666aa;
-  --shadow: 0 4px 24px rgba(0,0,0,0.1);
-  --bar-default: #6c63ff;
-  --cell-bg: #e8eaf6;
-  --cell-text: #1a1a2e;
-  --cell-idx: #6666aa;
-  --accent: #5b53e8;
-  --accent2: #e84b6a;
-  --accent3: #0fa87a;
-  --accent4: #c07030;
-  --yellow: #d4890a;
-  --compare: #e84b6a;
-  --swap: #0fa87a;
-  --sorted: #5b53e8;
-  --pivot: #d4890a;
-  --current: #c07030;
-}
-
-/* ===== RESET ===== */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
-button{cursor:pointer;font-family:inherit;border:none;outline:none}
-input,select{font-family:inherit;outline:none}
-canvas{display:block}
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--surface)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
-/* ===== LAYOUT ===== */
-#app{display:flex;height:100vh}
-
-/* ===== SIDEBAR ===== */
-#sidebar{
-  width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;
-  background:var(--surface);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden;
-  transition:transform .3s,width .3s;z-index:100;
-}
-#sidebar-header{
-  padding:20px 16px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:10px;
-}
-#sidebar-header .logo{
-  font-family:var(--font-head);font-size:20px;font-weight:800;
-  background:linear-gradient(135deg,var(--accent),var(--accent3));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-#sidebar-nav{flex:1;overflow-y:auto;padding:8px}
-.nav-section{margin-bottom:4px}
-.nav-section-title{
-  font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--text-muted);padding:8px 8px 4px;
-}
-.nav-item{
-  display:flex;align-items:center;gap:8px;padding:8px 12px;
-  border-radius:var(--radius);cursor:pointer;font-size:13px;
-  color:var(--text-muted);transition:all .15s;margin-bottom:1px;
-}
-.nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:var(--accent);color:#fff}
-.nav-item .icon{font-size:16px;width:20px;text-align:center}
-.nav-arrow{margin-left:auto;font-size:10px;transition:transform .2s}
-.nav-children{display:none;margin-left:28px}
-.nav-section.open .nav-arrow{transform:rotate(90deg)}
-.nav-section.open .nav-children{display:block}
-.nav-child{
-  padding:6px 10px;border-radius:var(--radius);cursor:pointer;
-  font-size:12px;color:var(--text-muted);transition:all .15s;margin-bottom:1px;
-}
-.nav-child:hover{background:var(--surface2);color:var(--text)}
-.nav-child.active{color:var(--accent);font-weight:600}
-
-/* ===== MAIN CONTENT ===== */
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-
-/* ===== TOPBAR ===== */
-#topbar{
-  height:56px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;
-}
-#menu-btn{
-  background:none;border:1px solid var(--border);border-radius:6px;
-  padding:6px 10px;color:var(--text-muted);font-size:16px;display:none;
-}
-#algo-title{font-family:var(--font-head);font-size:18px;font-weight:700;flex:1}
-#complexity-badge{
-  display:flex;gap:8px;
-}
-.badge{
-  padding:4px 10px;border-radius:20px;font-size:11px;font-family:var(--font-mono);
-  background:var(--surface2);border:1px solid var(--border);
-}
-.badge span{color:var(--accent3)}
-#dark-toggle{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:20px;padding:6px 14px;color:var(--text);font-size:13px;
-}
-#lang-select{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;
-}
-
-/* ===== SIDEBAR COLLAPSE ===== */
-#sidebar {
-  transition: width .25s ease, min-width .25s ease;
-}
-#sidebar.collapsed {
-  width: 0 !important;
-  min-width: 0 !important;
-  overflow: hidden;
-  border-right: none;
-}
-/* Sidebar toggle button — always visible in topbar */
-#sidebar-toggle-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
-  color: var(--text-muted);
-  font-size: 16px;
-  cursor: pointer;
-  line-height: 1;
-  flex-shrink: 0;
-  transition: background .15s, color .15s;
-}
-#sidebar-toggle-btn:hover { background: var(--surface3); color: var(--text); }
-
-/* ===== CODE PANEL COLLAPSE ===== */
-/* #code-panel-header is always visible (outside the collapsible div).
-   #code-panel is the collapsible content area.
-   Both sit in a column wrapper .code-col inside #bottom-panels. */
-.code-col {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  border-right: 1px solid var(--border);
-  overflow: hidden;
-  min-width: 0;
-}
-#code-panel-header {
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  background: var(--surface);
-}
-#code-panel {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: max-height .25s ease, opacity .25s ease;
-  max-height: 600px;   /* generous cap so transition works */
-  opacity: 1;
-}
-#code-panel.hidden {
-  max-height: 0 !important;
-  opacity: 0;
-  pointer-events: none;
-}
-#code-content { flex: 1; overflow: auto; padding: 8px 0; }
-#code-toggle-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 11px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  transition: color .15s;
-  white-space: nowrap;
-}
-#code-toggle-btn:hover { color: var(--accent); }
-
-/* ===== CONTENT AREA ===== */
-#content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-
-/* ===== VISUALIZATION PANEL ===== */
-#viz-panel{
-  /* User-resizable: flex:1 provides the default growth; JS can override height */
-  flex:1;background:var(--surface2);position:relative;min-height:120px;
-  border-bottom:1px solid var(--border);overflow:hidden;
-  /* We set an explicit min so the handle is always reachable */
-}
-#viz-canvas-wrap{width:100%;height:100%;position:relative;overflow:hidden}
-#main-canvas{display:block;/* sized by resizeCanvas() */}
-
-/* ── Resize handle ── */
-#viz-resize-handle{
-  position:absolute;bottom:0;right:0;width:18px;height:18px;
-  cursor:se-resize;z-index:20;
-  /* Visual caret made with a pure CSS border trick */
-  background:
-    linear-gradient(135deg,
-      transparent 40%,
-      var(--border) 40%, var(--border) 46%,
-      transparent 46%),
-    linear-gradient(135deg,
-      transparent 55%,
-      var(--border) 55%, var(--border) 61%,
-      transparent 61%),
-    linear-gradient(135deg,
-      transparent 70%,
-      var(--border) 70%, var(--border) 76%,
-      transparent 76%);
-  opacity:.7;transition:opacity .15s;
-}
-#viz-resize-handle:hover{opacity:1}
-/* Stats bar sits BELOW the topbar, ABOVE the canvas — never overlaps bars */
-#viz-overlay{
-  display:flex;justify-content:space-between;align-items:center;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  padding:5px 16px;flex-shrink:0;
-}
-.viz-stat{
-  font-family:var(--font-mono);font-size:11px;display:flex;gap:16px;align-items:center;
-}
-.viz-stat-item span{color:var(--accent3)}
-.viz-stat-sep{width:1px;height:14px;background:var(--border);margin:0 2px;}
-
-/* ===== COMPLEXITY PANEL ===== */
-#cx-panel{
-  display:flex;align-items:center;gap:0;flex-wrap:nowrap;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  padding:6px 16px;flex-shrink:0;overflow:hidden;
-}
-.cx-block{display:flex;align-items:center;gap:6px;padding:0 14px 0 0;}
-#cx-ops-grid{display:flex;flex-wrap:wrap;gap:0;align-items:center;}
-.cx-op-item{display:flex;align-items:center;gap:5px;padding:0 10px 0 0;border-right:1px solid var(--border);margin-right:10px;}
-.cx-op-item:last-child{border-right:none;}
-.cx-op-lbl{font-size:9px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;}
-.cx-op-val{font-size:11px;font-weight:700;font-family:var(--font-mono);color:var(--accent4);white-space:nowrap;}
-.cx-lbl{
-  font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--text-muted);
-}
-.cx-val{
-  font-family:var(--font-mono);font-size:12px;font-weight:600;
-  color:var(--accent3);
-}
-.cx-worst{color:var(--accent2);}
-.cx-space{color:var(--yellow);}
-.cx-sep{color:var(--border);padding:0 4px 0 0;font-size:14px;}
-.cx-note{
-  font-size:10px;color:var(--text-muted);padding-left:8px;
-  border-left:1px solid var(--border);margin-left:4px;font-style:italic;
-}
-
-/* ===== STEP EXPLANATION ===== */
-#step-box{
-  background:var(--surface);border-bottom:1px solid var(--border);
-  padding:10px 20px;font-size:13px;min-height:42px;
-  display:flex;align-items:center;gap:10px;
-}
-#step-num{
-  background:var(--accent);color:#fff;border-radius:20px;
-  padding:2px 10px;font-size:11px;font-family:var(--font-mono);font-weight:600;
-  white-space:nowrap;
-}
-#step-text{color:var(--text);line-height:1.4}
-
-/* ===== BOTTOM PANELS ===== */
-#bottom-panels{
-  height:220px;display:flex;flex-shrink:0;background:var(--surface);
-  border-top:1px solid var(--border);
-}
-#code-content{flex:1;overflow:auto;padding:8px 0}
-.code-line{
-  display:flex;align-items:center;padding:2px 16px;
-  font-family:var(--font-mono);font-size:11px;line-height:1.8;
-  color:var(--text-muted);transition:background .15s;
-}
-.code-line.active{background:rgba(108,99,255,0.2);color:var(--text)}
-.code-line .ln{color:var(--border);width:24px;flex-shrink:0;user-select:none}
-
-/* ===== CONTROL PANEL ===== */
-#ctrl-panel{
-  width:280px;flex-shrink:0;display:flex;flex-direction:column;
-  padding:12px;gap:10px;overflow-y:auto;
-  max-height:100%;
-}
-.ctrl-group{display:flex;flex-direction:column;gap:6px}
-.ctrl-label{font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:.5px}
-.ctrl-btns{display:flex;gap:6px;flex-wrap:wrap}
-.btn{
-  padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;
-  background:var(--surface2);border:1px solid var(--border);color:var(--text);
-  transition:all .15s;display:flex;align-items:center;gap:5px;
-}
-.btn:hover{background:var(--surface3);border-color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.primary:hover{filter:brightness(1.1)}
-.btn.danger{background:rgba(255,101,132,0.15);border-color:var(--accent2);color:var(--accent2)}
-.btn.success{background:rgba(67,217,173,0.15);border-color:var(--accent3);color:var(--accent3)}
-.btn:disabled{opacity:.4;pointer-events:none}
-.range-wrap{display:flex;align-items:center;gap:8px}
-.range-wrap input[type=range]{flex:1;accent-color:var(--accent)}
-.range-val{font-family:var(--font-mono);font-size:11px;color:var(--accent3);min-width:28px;text-align:right}
-.ctrl-input{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:6px;padding:7px 12px;color:var(--text);font-size:12px;width:100%;
-}
-.ctrl-input:focus{border-color:var(--accent)}
-
-/* ===== LEGEND ===== */
-#legend{
-  display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;
-  border-top:1px solid var(--border);
-}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted)}
-.legend-dot{width:10px;height:10px;border-radius:2px}
-
-/* ===== DATA STRUCTURE SPECIFIC ===== */
-#ds-panel{width:100%;height:100%;position:relative;overflow:hidden}
-.ds-canvas{width:100%;height:100%}
-
-/* ===== TABS ===== */
-.tabs{display:flex;border-bottom:1px solid var(--border)}
-.tab{
-  padding:8px 16px;font-size:12px;cursor:pointer;
-  color:var(--text-muted);border-bottom:2px solid transparent;transition:all .15s;
-}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.tab-content{display:none;flex:1;overflow:auto}
-.tab-content.active{display:flex;flex-direction:column}
-
-/* ===== COMPLEXITY TABLE ===== */
-#complexity-panel{
-  background:var(--surface);border-top:1px solid var(--border);
-  padding:12px 20px;display:flex;gap:20px;align-items:center;
-  font-size:12px;flex-wrap:wrap;
-}
-.cx-item{display:flex;flex-direction:column;gap:2px;align-items:center}
-.cx-label{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
-.cx-val{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--accent4)}
-.cx-case{color:var(--text-muted);font-size:10px}
-
-/* ===== QUIZ MODE ===== */
-#quiz-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-  backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;
-}
-#quiz-overlay.active{display:flex}
-#quiz-card{
-  background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  padding:32px;max-width:520px;width:90%;
-}
-.quiz-q{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:20px}
-.quiz-options{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-.quiz-opt{
-  padding:12px 18px;border-radius:8px;border:1px solid var(--border);
-  cursor:pointer;transition:all .15s;font-size:14px;
-}
-.quiz-opt:hover{border-color:var(--accent);background:var(--surface2)}
-.quiz-opt.correct{border-color:var(--accent3);background:rgba(67,217,173,.15);color:var(--accent3)}
-.quiz-opt.wrong{border-color:var(--accent2);background:rgba(255,101,132,.15);color:var(--accent2)}
-.quiz-feedback{font-size:14px;margin-bottom:16px;min-height:20px}
-
-/* ===== COMPARISON MODE ===== */
-#compare-wrap{display:flex;gap:0;flex:1;overflow:hidden}
-.compare-half{flex:1;border-right:1px solid var(--border);overflow:hidden;position:relative}
-.compare-half:last-child{border-right:none}
-.compare-label{
-  position:absolute;top:8px;left:12px;
-  background:var(--accent);color:#fff;border-radius:4px;padding:3px 10px;
-  font-size:11px;font-weight:600;z-index:10;
-}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:900px){
-  #sidebar{position:fixed;left:0;top:0;transform:translateX(-100%)}
-  #sidebar.open{transform:translateX(0)}
-  #menu-btn{display:block}
-  #bottom-panels{height:auto;flex-direction:column}
-  #ctrl-panel{width:100%;border-top:1px solid var(--border)}
-  #code-panel{height:180px}
-  .badge{display:none}
-}
-@media(max-width:600px){
-  #bottom-panels{height:320px}
-}
-
-/* ===== ADJACENCY PANEL — floating toggle overlay ===== */
-#adj-toggle-btn{
-  display:none;position:absolute;bottom:10px;right:28px;z-index:15;
-  background:var(--surface3);border:1px solid var(--border);color:var(--text);
-  font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:5px;
-  cursor:pointer;transition:background .15s;
-}
-#adj-toggle-btn:hover{background:var(--accent)}
-#adj-toggle-btn.visible{display:block}
-#adj-panel-wrap{
-  display:none;position:absolute;bottom:36px;right:28px;z-index:14;
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:12px 16px;max-height:260px;overflow-y:auto;overflow-x:auto;
-  min-width:320px;max-width:min(560px, 90vw);
-  box-shadow:0 4px 24px rgba(0,0,0,0.5);
-}
-#adj-panel-wrap.visible{display:block}
-#adj-panel{font-size:11px;color:var(--text)}
-
-/* ===== FULLSCREEN MODE ===== */
-#app.fs-active #sidebar,
-#app.fs-active #topbar,
-#app.fs-active #viz-overlay,
-#app.fs-active #cx-panel,
-#app.fs-active #step-box,
-#app.fs-active #legend,
-#app.fs-active #bottom-panels {
-  display: none !important;
-}
-#app.fs-active #main   { position:fixed;inset:0;z-index:200;background:var(--bg); }
-#app.fs-active #content{ height:100vh;overflow:hidden;display:flex;flex-direction:column; }
-#app.fs-active #viz-panel {
-  flex:1 !important;
-  width:100vw !important;
-  height:calc(100vh - 72px) !important;
-  border:none;
-  min-height:0;
-}
-
-/* Fullscreen enter button — lives in the stats bar (viz-overlay) */
-#fs-btn {
-  background:var(--surface3);border:1px solid var(--border);
-  color:var(--text-muted);font-family:var(--font-mono);font-size:10px;
-  padding:4px 10px;border-radius:5px;cursor:pointer;
-  transition:background .15s,color .15s;margin-left:auto;flex-shrink:0;
-}
-#fs-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-/* HUD bottom bar — hidden normally, shown when #app has .fs-active */
-#fs-hud {
-  display: none;
-  position: fixed;
-  bottom:0; left:0; right:0;
-  height: 56px;
-  z-index: 9999;
-  background: rgba(10,10,18,0.97);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  flex-wrap: nowrap;
-  padding: 0 12px;
-  overflow-x: auto;
-}
-#app.fs-active #fs-hud { display: flex !important; }
-
-#fs-hud .hud-btn {
-  background:var(--surface3);border:1px solid var(--border);
-  color:var(--text);font-size:11px;padding:5px 10px;border-radius:5px;
-  cursor:pointer;font-family:var(--font-mono);transition:background .12s;
-  white-space:nowrap;flex-shrink:0;
-}
-#fs-hud .hud-btn:hover  { background:var(--accent);color:#fff;border-color:var(--accent); }
-#fs-hud .hud-btn.primary{ background:var(--accent);color:#fff;border-color:var(--accent); }
-#fs-hud .hud-btn.success{ background:rgba(34,197,94,.15);color:#22c55e;border-color:#22c55e; }
-#fs-hud .hud-btn.danger { background:rgba(255,101,132,.12);color:var(--accent2);border-color:var(--accent2); }
-#fs-hud .hud-btn.exit   { background:rgba(167,139,250,.12);color:#a78bfa;border-color:#a78bfa; }
-#fs-hud .hud-btn:disabled { opacity:.4;pointer-events:none; }
-#fs-hud .hud-sep { width:1px;height:28px;background:var(--border);margin:0 4px;flex-shrink:0; }
-#fs-hud .hud-speed {
-  display:flex;align-items:center;gap:6px;
-  font-family:var(--font-mono);font-size:10px;color:var(--text-muted);
-}
-#fs-hud .hud-speed input { width:80px;accent-color:var(--accent); }
-
-/* Step info bar — hidden normally, shown in fullscreen */
-#fs-step-info {
-  display: none;
-  position: fixed;
-  top:12px; left:50%; transform:translateX(-50%);
-  z-index: 9999;
-  background: rgba(18,18,26,0.92);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 18px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  text-align: center;
-  max-width: 80vw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-#app.fs-active #fs-step-info { display: block !important; }
-
-/* DS scroll: when content wider/taller than panel, user can scroll */
-#viz-panel.ds-scroll { overflow:auto !important; }
-#viz-panel.ds-scroll canvas { display:block; }
-
-/* ===== SORT VIEW TOGGLE ===== */
-#sort-view-toggle {
-  background:var(--surface3);border:1px solid var(--border);
-  color:var(--text-muted);font-family:var(--font-mono);font-size:10px;
-  padding:3px 9px;border-radius:5px;cursor:pointer;
-  transition:background .15s,color .15s;flex-shrink:0;
-}
-#sort-view-toggle:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-#sort-view-toggle.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-/* ===== ALGO EXPLANATION BUTTON ===== */
-#explain-btn {
-  background: #fff7d6;
-  border: 1px solid #e6c84a;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  padding: 4px 10px;
-  line-height: 1.4;
-  flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-  transition: background .15s, box-shadow .15s, transform .1s;
-  color: #7a5f00;
-  font-weight: 700;
-}
-#explain-btn:hover {
-  background: #ffe566;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
-  transform: translateY(-1px);
-}
-#explain-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
-#explain-panel {
-  display:none;position:fixed;
-  top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:500;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:20px 24px;
-  width:min(480px,90vw);max-height:70vh;overflow-y:auto;
-  box-shadow:0 12px 48px rgba(0,0,0,0.6);
-}
-#explain-panel.open{display:block;}
-#explain-panel h3{
-  font-family:var(--font-head);font-size:16px;font-weight:700;
-  margin-bottom:12px;color:var(--text);
-}
-#explain-panel p, #explain-panel li {
-  font-size:13px;line-height:1.7;color:var(--text-muted);
-}
-#explain-panel ul{padding-left:18px;margin-top:6px;}
-#explain-panel li{margin-bottom:4px;}
-#explain-close {
-  position:absolute;top:12px;right:16px;
-  background:none;border:none;font-size:18px;
-  color:var(--text-muted);cursor:pointer;
-}
-#explain-close:hover{color:var(--text);}
-#explain-overlay {
-  display:none;position:fixed;inset:0;z-index:499;
-  background:rgba(0,0,0,0.4);
-}
-#explain-overlay.open{display:block;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-@keyframes slideIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
-.animate-in{animation:slideIn .3s ease}
-
-/* ===== SMOOTH CANVAS RENDERING ===== */
-#main-canvas {
-  image-rendering: auto;
-  will-change: transform;
-}
-
-/* ===== FULLSCREEN ENHANCED STEP INFO ===== */
-#app.fs-active #fs-step-info {
-  font-size: 12px !important;
-  padding: 8px 24px !important;
-  border-radius: 10px !important;
-  background: rgba(18,18,26,0.95) !important;
-  border: 1px solid rgba(108,99,255,0.3) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 30px rgba(108,99,255,0.08) !important;
-  letter-spacing: 0.2px;
-  transition: background .2s, border-color .2s;
-}
-
-/* Fullscreen HUD button glow on hover */
-#fs-hud .hud-btn {
-  transition: background .15s, color .15s, box-shadow .15s, transform .1s;
-}
-#fs-hud .hud-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(108,99,255,0.25);
-}
-#fs-hud .hud-btn:active {
-  transform: translateY(0);
-}
-
-/* ===== TOOLTIP ===== */
-.tooltip{position:relative}
-.tooltip::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 5px);left:50%;
-  transform:translateX(-50%);background:var(--surface3);color:var(--text);
-  padding:4px 8px;border-radius:4px;font-size:11px;white-space:nowrap;
-  pointer-events:none;opacity:0;transition:opacity .15s;
-}
-.tooltip:hover::after{opacity:1}
-/* Toast notification */
-.toast {
-  position: fixed;
-  bottom: 475px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--surface3);
-  color: var(--accent2);
-  border-left: 4px solid var(--accent2);
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  backdrop-filter: blur(8px);
-  background-color: rgba(0,0,0,0.85);
-}
-.light .toast {
-  background-color: rgba(255,255,255,0.95);
-  color: var(--accent2);
-  border-left-color: var(--accent2);
-}
-.toast.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-/* Toast notification */
-.toast {
-  position: fixed;
-  bottom: 470px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--surface3);
-  color: var(--accent2);
-  border-left: 4px solid var(--accent2);
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  backdrop-filter: blur(8px);
-  background-color: rgba(0, 0, 0, 0.85);
-}
-.light .toast {
-  background-color: rgba(255, 255, 255, 0.95);
-  color: var(--accent2);
-  border-left-color: var(--accent2);
-}
-.toast.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-/* Horizontal resize handle between viz panel and bottom panels */
-.resize-handle-horizontal {
-  height: 6px;
-  background: var(--border);
-  cursor: ns-resize;
-  width: 100%;
-  flex-shrink: 0;
-  transition: background 0.2s;
-  position: relative;
-  z-index: 10;
-}
-.resize-handle-horizontal:hover {
-  background: var(--accent);
-}
-
-/* Default bottom panel height – now set via JS, but we provide a fallback */
-#bottom-panels {
-  height: 180px;   /* smaller default */
-  min-height: 100px;
-  max-height: 70vh;
-  overflow: hidden;
-}
-
-</style>
-</head>
-<body>
-<div id="app">
-  <!-- SIDEBAR -->
-  <nav id="sidebar">
-    <div id="sidebar-header">
-      <span class="logo">AlgoViz</span>
-    </div>
-    <div id="sidebar-nav">
-      <!-- Sorting -->
-      <div class="nav-section" id="sec-sorting">
-        <div class="nav-item" onclick="toggleSection('sec-sorting')">
-          <span class="icon">📊</span> Sorting
-          <span class="nav-arrow">▶</span>
-        </div>
-        <div class="nav-children">
-          <div class="nav-child" onclick="loadAlgo('bubble')">Bubble Sort</div>
-          <div class="nav-child" onclick="loadAlgo('selection')">Selection Sort</div>
-          <div class="nav-child" onclick="loadAlgo('insertion')">Insertion Sort</div>
-          <div class="nav-child" onclick="loadAlgo('merge')">Merge Sort</div>
-          <div class="nav-child" onclick="loadAlgo('quick')">Quick Sort</div>
-          <div class="nav-child" onclick="loadAlgo('heap')">Heap Sort</div>
-          <div class="nav-child" onclick="loadAlgo('counting')">Counting Sort</div>
-          <div class="nav-child" onclick="loadAlgo('radix')">Radix Sort</div>
-        </div>
-      </div>
-      <!-- Searching -->
-      <div class="nav-section" id="sec-search">
-        <div class="nav-item" onclick="toggleSection('sec-search')">
-          <span class="icon">🔍</span> Searching
-          <span class="nav-arrow">▶</span>
-        </div>
-        <div class="nav-children">
-          <div class="nav-child" onclick="loadAlgo('linear-search')">Linear Search</div>
-          <div class="nav-child" onclick="loadAlgo('binary-search')">Binary Search</div>
-          <div class="nav-child" onclick="loadAlgo('jump-search')">Jump Search</div>
-        </div>
-      </div>
-      <!-- Data Structures -->
-      <div class="nav-section" id="sec-ds">
-        <div class="nav-item" onclick="toggleSection('sec-ds')">
-          <span class="icon">🗂️</span> Data Structures
-          <span class="nav-arrow">▶</span>
-        </div>
-        <div class="nav-children">
-          <div class="nav-child" onclick="loadAlgo('array-ds')">Array</div>
-          <div class="nav-child" onclick="loadAlgo('stack-ds')">Stack</div>
-          <div class="nav-child" onclick="loadAlgo('queue-ds')">Queue</div>
-          <div class="nav-child" onclick="loadAlgo('singly-ll')">Singly Linked List</div>
-          <div class="nav-child" onclick="loadAlgo('doubly-ll')">Doubly Linked List</div>
-          <div class="nav-child" onclick="loadAlgo('circular-ll')">Circular Linked List</div>
-          <div class="nav-child" onclick="loadAlgo('ordered-ll')">Ordered Linked List</div>
-        </div>
-      </div>
-      <!-- Trees -->
-      <div class="nav-section" id="sec-tree">
-        <div class="nav-item" onclick="toggleSection('sec-tree')">
-          <span class="icon">🌳</span> Trees
-          <span class="nav-arrow">▶</span>
-        </div>
-        <div class="nav-children">
-          <div class="nav-child" onclick="loadAlgo('bst')">Binary Search Tree</div>
-          <div class="nav-child" onclick="loadAlgo('avl')">AVL Tree</div>
-          <div class="nav-child" onclick="loadAlgo('binary-tree')">Binary Tree Traversal</div>
-          <div class="nav-child" onclick="loadAlgo('heap-tree')">Heap Tree</div>
-        </div>
-      </div>
-      <!-- Graphs -->
-      <div class="nav-section" id="sec-graph">
-        <div class="nav-item" onclick="toggleSection('sec-graph')">
-          <span class="icon">🕸️</span> Graphs
-          <span class="nav-arrow">▶</span>
-        </div>
-        <div class="nav-children">
-          <div class="nav-child" onclick="loadAlgo('bfs')">BFS</div>
-          <div class="nav-child" onclick="loadAlgo('dfs')">DFS</div>
-          <div class="nav-child" onclick="loadAlgo('dijkstra')">Dijkstra</div>
-        </div>
-      </div>
-      <!-- Modes -->
-      <div class="nav-section-title">Modes</div>
-      <div class="nav-item" onclick="openQuiz()"><span class="icon">🎯</span> Quiz Mode</div>
-    </div>
-  </nav>
-
-  <!-- MAIN -->
-  <div id="main">
-    <!-- TOPBAR -->
-    <div id="topbar">
-      <button id="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Show/hide sidebar">☰</button>
-      <button id="menu-btn" onclick="toggleSidebar()">☰</button>
-      <div id="algo-title">Bubble Sort</div>
-      <select id="lang-select" onchange="updateCode()">
-        <option value="cpp">C++</option>
-        <option value="python">Python</option>
-        <option value="java">Java</option>
-        <option value="csharp">C#</option>
-      </select>
-      <button id="dark-toggle" onclick="toggleTheme()">☀️ Light</button>
-    </div>
-
-    <!-- CONTENT -->
-    <div id="content">
-      <!-- STATS BAR — contains step counter, fullscreen, and explain -->
-      <div id="viz-overlay">
-        <div class="viz-stat">
-          <div class="viz-stat-item">Comparisons: <span id="stat-cmp">0</span></div>
-          <div class="viz-stat-item">Swaps: <span id="stat-swp">0</span></div>
-          <div class="viz-stat-item">Steps: <span id="stat-stp">0</span></div>
-          <div class="viz-stat-sep"></div>
-          <div class="viz-stat-item">Size: <span id="stat-size">20</span></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
-          <span id="fs-hint" style="display:none;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:#f59e0b;white-space:nowrap;border:1.5px solid #f59e0b44;padding:4px 12px 4px 10px;border-radius:20px;letter-spacing:0.4px;cursor:default;background:rgba(245,158,11,0.08);">Best viewed in fullscreen &nbsp;🖥️</span>
-          <button id="fs-btn" onclick="enterFullscreen()" title="Fullscreen visualization">⛶ Fullscreen</button>
-          <button id="explain-btn" onclick="openExplain()" title="How this algorithm works">💡 Explain</button>
-        </div>
-      </div>
-
-      <!-- COMPLEXITY PANEL -->
-      <div id="cx-panel">
-        <!-- Sort items are direct flex children — no wrapper div -->
-        <div class="cx-block" id="cx-sort-block-1" style="display:none">
-          <span class="cx-lbl" id="cx-lbl-1">Best</span>
-          <span class="cx-val" id="cx-val-1">—</span>
-        </div>
-        <div class="cx-sep" id="cx-sep-1" style="display:none">|</div>
-        <div class="cx-block" id="cx-sort-block-2" style="display:none">
-          <span class="cx-lbl" id="cx-lbl-2">Average</span>
-          <span class="cx-val" id="cx-val-2">—</span>
-        </div>
-        <div class="cx-sep" id="cx-sep-2" style="display:none">|</div>
-        <div class="cx-block" id="cx-sort-block-3" style="display:none">
-          <span class="cx-lbl" id="cx-lbl-3">Worst</span>
-          <span class="cx-val cx-worst" id="cx-val-3">—</span>
-        </div>
-        <div class="cx-sep" id="cx-sep-3" style="display:none">|</div>
-        <div class="cx-block" id="cx-sort-block-space" style="display:none">
-          <span class="cx-lbl">Space</span>
-          <span class="cx-val cx-space" id="cx-space-val">O(1)</span>
-        </div>
-        <!-- DS mode: operation items inline -->
-        <div id="cx-ops-grid" style="display:none;flex-wrap:wrap;gap:0;align-items:center;"></div>
-        <span id="cx-space-ds" style="display:none;margin-left:8px;font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">Space: —</span>
-      </div>
-      <!-- VIZ PANEL — contains canvas + floating graph overlay -->
-      <div id="viz-panel">
-        <canvas id="main-canvas"></canvas>
-        <div id="viz-resize-handle" title="Drag to resize"></div>
-        <!-- Adjacency panel: floating overlay, shown only for graph algos -->
-        <button id="adj-toggle-btn" onclick="toggleAdjPanel()" title="Show/hide adjacency representation">📊 Adjacency</button>
-        <div id="adj-panel-wrap">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:1px">GRAPH REPRESENTATION</span>
-            <button onclick="toggleAdjPanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1">✕</button>
-          </div>
-          <div id="adj-panel"></div>
-        </div>
-      </div>
-
-      <!-- STEP EXPLANATION -->
-      <div id="step-box">
-        <span id="step-num">Step 0</span>
-        <span id="step-text">Press Start to begin visualization</span>
-      </div>
-
-      <!-- LEGEND -->
-      <div id="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--compare)"></div>Comparing</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--swap)"></div>Swapping</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--sorted)"></div>Sorted</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--pivot)"></div>Pivot</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--current)"></div>Current</div>
-      </div>
-
-      <!-- BOTTOM PANELS -->
-       <div id="bottom-resize-handle" class="resize-handle-horizontal" title="Drag to resize bottom panel"></div>
-      <div id="bottom-panels">
-        <!-- CODE COLUMN: header always visible, panel below it collapses -->
-        <div class="code-col">
-          <div id="code-panel-header">
-            <span>Code</span>
-            <span id="code-lang-badge" style="color:var(--accent3)">C++</span>
-            <button id="code-toggle-btn" onclick="toggleCodePanel()" title="Hide/show code panel">Hide Code</button>
-          </div>
-          <div id="code-panel">
-            <div id="code-content"></div>
-          </div>
-        </div>
-
-        <!-- CONTROL PANEL -->
-        <div id="ctrl-panel">
-          <div class="ctrl-group" id="ctrl-group-controls">
-            <div class="ctrl-label">Controls</div>
-            <div class="ctrl-btns">
-              <button class="btn primary" id="btn-start" onclick="ctrlStart()">▶ Start</button>
-              <button class="btn" id="btn-pause" onclick="ctrlPause()" disabled>⏸ Pause</button>
-              <button class="btn" id="btn-step-fwd" onclick="ctrlStepFwd()">⏩ Step</button>
-              <button class="btn" id="btn-step-bk" onclick="ctrlStepBack()">⏪ Back</button>
-              <button class="btn danger" onclick="ctrlReset()">↺ Reset</button>
-            </div>
-          </div>
-          <div class="ctrl-group" id="ctrl-group-speed">
-            <div class="ctrl-label">Speed</div>
-            <div class="range-wrap">
-              <input type="range" id="speed-range" min="1" max="10" value="5" oninput="updateSpeed(this.value)">
-              <span class="range-val" id="speed-val">5</span>
-            </div>
-          </div>
-          <div class="ctrl-group">
-            <div class="ctrl-label" id="size-ctrl-label">Array Size</div>
-            <div class="range-wrap">
-            <input type="range" id="size-range" min="5" max="20" value="20" oninput="updateSize(this.value)">
-              <span class="range-val" id="size-val">20</span>
-            </div>
-          </div>
-          <div class="ctrl-group">
-            <div class="ctrl-label">Custom Input</div>
-            <input type="text" class="ctrl-input" id="custom-input" placeholder="e.g. 5,3,8,1,9" />
-            <button class="btn success" onclick="applyCustomInput()">Apply</button>
-          </div>
-          <div class="ctrl-group" id="ctrl-group-random">
-            <button class="btn" onclick="generateRandom()">🎲 Random Array</button>
-          </div>
-          <div class="ctrl-group">
-            <div class="ctrl-label">DS Operations</div>
-            <div id="ds-ops" style="display:flex;flex-direction:column;gap:6px"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- ALGORITHM EXPLANATION PANEL -->
-  <div id="explain-overlay" onclick="closeExplain()"></div>
-  <div id="explain-panel">
-    <button id="explain-close" onclick="closeExplain()">✕</button>
-    <h3 id="explain-title">Algorithm</h3>
-    <div id="explain-body"></div>
-  </div>
-
-  <!-- FULLSCREEN HUD — inside #main so it shares the same stacking context -->
- <div id="fs-hud" style="display:none">
-  <button class="hud-btn primary" id="fs-hud-run-graph" style="display:none" onclick="runGraphAlgo()">▶ Run</button>
-  <button class="hud-btn primary" id="fs-hud-start" onclick="ctrlStart()">▶ Play</button>
-  <button class="hud-btn" id="fs-hud-pause" onclick="ctrlPause()" disabled>⏸ Pause</button>
-  <button class="hud-btn" onclick="ctrlStepFwd()">⏩ Step</button>
-  <button class="hud-btn" onclick="ctrlStepBack()">⏪ Back</button>
-  <button class="hud-btn danger" onclick="ctrlReset()">↺ Reset</button>
-  <div id="fs-hud-ll-ops" style="display:none;align-items:center;gap:4px;flex-wrap:nowrap;flex-shrink:0"></div>
-  <div class="hud-sep"></div>
-  <div class="hud-speed">
-    <span>Speed</span>
-    <input type="range" id="fs-speed" min="1" max="10" value="5"
-      oninput="updateSpeed(this.value);document.getElementById('speed-range').value=this.value;document.getElementById('speed-val').textContent=this.value;document.getElementById('fs-speed-val').textContent=this.value">
-    <span id="fs-speed-val">5</span>
-  </div>
-  <div class="hud-sep"></div>
-  <button class="hud-btn exit">✕ Exit Fullscreen</button>
-</div>
-  <!-- FULLSCREEN STEP INFO BAR -->
-  <div id="fs-step-info" style="display:none">Press Play or Step to begin</div>
-</div><!-- /#app -->
-<div id="quiz-overlay" style="display:none">
-  <div id="quiz-card">
-    <div class="quiz-q" id="quiz-q"></div>
-    <div class="quiz-options" id="quiz-opts"></div>
-    <div class="quiz-feedback" id="quiz-fb"></div>
-    <div style="display:flex; gap:10px; margin-top:20px; justify-content:center;">
-      <button class="btn primary" onclick="nextQuiz()">Next Question →</button>
-      <button class="btn" onclick="closeQuiz()">Close</button>
-    </div>
-  </div>
-</div>
-  
-  
-<script>
 // =====================================================
 // GLOBAL STATE
 // =====================================================
+
 const state = {
   algo: 'bubble',
   array: [],
@@ -1037,6 +19,62 @@ const state = {
   darkMode: true,
   animTimer: null,
 };
+let queueOpQueue = [];
+let queueProcessing = false;
+
+const _queueAnim = {
+  active: false,
+  rafId: null,
+  startTime: 0,
+  duration: 800,
+  type: null,      // 'enqueue', 'dequeue'
+  value: null,
+  oldLen: 0,
+  newLen: 0,
+  onComplete: null,
+  t: 0,
+};
+
+function _queueAnimReset() {
+  if (_queueAnim.rafId) cancelAnimationFrame(_queueAnim.rafId);
+  _queueAnim.active = false;
+  _queueAnim.rafId = null;
+  _queueAnim.type = null;
+  _queueAnim.value = null;
+  _queueAnim.oldLen = 0;
+  _queueAnim.newLen = 0;
+  _queueAnim.onComplete = null;
+  _queueAnim.t = 0;
+}
+
+function _animateQueue(type, value, oldLen, newLen, callback) {
+  _queueAnimReset();
+  _queueAnim.active = true;
+  _queueAnim.type = type;
+  _queueAnim.value = value;
+  _queueAnim.oldLen = oldLen;
+  _queueAnim.newLen = newLen;
+  _queueAnim.onComplete = callback;
+  const speed = state.speed || 5;
+  _queueAnim.duration = Math.max(800, 2200 - speed * 140);
+  _queueAnim.startTime = performance.now();
+
+  function frame(now) {
+    const elapsed = now - _queueAnim.startTime;
+    _queueAnim.t = Math.min(1, elapsed / _queueAnim.duration);
+    drawQueue(true);
+    if (_queueAnim.t < 1) {
+      _queueAnim.rafId = requestAnimationFrame(frame);
+    } else {
+      const cb = _queueAnim.onComplete;
+      _queueAnim.active = false;
+      _queueAnim.onComplete = null;
+      drawQueue();
+      if (cb) cb();
+    }
+  }
+  _queueAnim.rafId = requestAnimationFrame(frame);
+}
 
 const canvas = document.getElementById('main-canvas');
 const ctx = canvas.getContext('2d');
@@ -1460,6 +498,124 @@ const algoExplanations = {
   prim:      { title:"Prim's MST", body:`<p>Builds a Minimum Spanning Tree by greedily adding the cheapest edge that connects the growing MST to an unvisited vertex.</p><ul><li>Starts from any vertex</li><li>Good for dense graphs</li><li>Output: tree that connects all vertices with minimum total weight</li></ul>` },
   kruskal:   { title:"Kruskal's MST", body:`<p>Builds a Minimum Spanning Tree by sorting all edges by weight and adding each one if it doesn't create a cycle, using Union-Find.</p><ul><li>Good for sparse graphs</li><li>O(E log E) dominated by edge sort</li><li>Processes edges globally rather than growing from a vertex</li></ul>` },
 };
+function openInfo() {
+  const key = state.algo;
+  let infoTitle = '';
+  let infoBody = '';
+
+  if (key === 'array-ds') {
+    infoTitle = 'Array';
+    infoBody = `
+      <p><strong>Array</strong> is a linear data structure that stores a fixed-size collection of elements of the same type in contiguous memory locations.</p>
+      <ul>
+        <li><strong>Access:</strong> O(1) – direct access by index.</li>
+        <li><strong>Search:</strong> O(n) – linear scan if unsorted.</li>
+        <li><strong>Insertion/Deletion:</strong> O(n) – shifting elements.</li>
+        <li><strong>Space Complexity:</strong> O(n).</li>
+      </ul>
+      <p><strong>Common Operations:</strong> Get/Set by index, push (if dynamic), pop, insert, delete, search, sort.</p>
+      <p><strong>Advantages:</strong> Fast random access, cache-friendly.</p>
+      <p><strong>Disadvantages:</strong> Fixed size (static), expensive insert/delete.</p>
+    `;
+  } else if (key === 'stack-ds') {
+    infoTitle = 'Stack';
+    infoBody = `
+      <p><strong>Stack</strong> is a linear data structure that follows the Last-In-First-Out (LIFO) principle. Elements are added and removed from the top only.</p>
+      <ul>
+        <li><strong>Push:</strong> O(1) – add element to the top.</li>
+        <li><strong>Pop:</strong> O(1) – remove the top element.</li>
+        <li><strong>Peek/Top:</strong> O(1) – view the top element without removing.</li>
+        <li><strong>Space Complexity:</strong> O(n).</li>
+      </ul>
+      <p><strong>Common Operations:</strong> Push, Pop, Peek, isEmpty, isFull (for fixed-size).</p>
+      <p><strong>Applications:</strong> Function call stack, Adding big integers, Evaluating postfix expressions, Bracket delimiters checking.</p>
+      <p><strong>Advantages:</strong> Simple, fast O(1) operations.</p>
+      <p><strong>Disadvantages:</strong> Limited access (only top element).</p>
+    `;
+  } else if (key === 'queue-ds') {
+    infoTitle = 'Queue';
+    infoBody = `
+      <p><strong>Queue</strong> is a linear data structure that follows the First-In-First-Out (FIFO) principle. Elements are added at the rear (enqueue) and removed from the front (dequeue).</p>
+      <ul>
+        <li><strong>Enqueue:</strong> O(1) – add element to the rear.</li>
+        <li><strong>Dequeue:</strong> O(1) – remove element from the front.</li>
+        <li><strong>Peek/Front:</strong> O(1) – view the front element without removing.</li>
+        <li><strong>Space Complexity:</strong> O(n).</li>
+      </ul>
+      <p><strong>Common Operations:</strong> Enqueue, Dequeue, Peek, isEmpty, isFull.</p>
+      <p><strong>Applications:</strong> Task scheduling, BFS, print spooler, buffering.</p>
+      <p><strong>Advantages:</strong> Fair ordering, simple operations.</p>
+      <p><strong>Disadvantages:</strong> Limited access (only front and rear).</p>
+    `;
+  } else if (key === 'singly-ll') {
+    infoTitle = 'Singly Linked List';
+    infoBody = `
+      <p><strong>Singly Linked List</strong> is a linear data structure where each node contains a value and a reference (pointer) to the next node. The list is traversed from the head to the tail.</p>
+      <ul>
+        <li><strong>Insert at Head:</strong> O(1) – add a new node at the beginning.</li>
+        <li><strong>Insert at Tail:</strong> O(n) – traverse to the end and add.</li>
+        <li><strong>Delete Head:</strong> O(1) – remove the first node.</li>
+        <li><strong>Delete by Value:</strong> O(n) – search and remove.</li>
+        <li><strong>Search:</strong> O(n) – linear search.</li>
+        <li><strong>Space Complexity:</strong> O(n) – each node stores one pointer.</li>
+      </ul>
+      <p><strong>Applications:</strong> Dynamic memory allocation, stacks, queues, adjacency lists.</p>
+      <p><strong>Advantages:</strong> Dynamic size, easy insertion/deletion at head.</p>
+      <p><strong>Disadvantages:</strong> No random access, extra memory for pointers.</p>
+    `;
+  } else if (key === 'doubly-ll') {
+    infoTitle = 'Doubly Linked List';
+    infoBody = `
+      <p><strong>Doubly Linked List</strong> is a linked list where each node has two pointers: one to the next node and one to the previous node. This allows traversal in both directions.</p>
+      <ul>
+        <li><strong>Insert at Head/Tail:</strong> O(1) – easy because of prev pointer.</li>
+        <li><strong>Delete at Head/Tail:</strong> O(1) – immediate.</li>
+        <li><strong>Insert/Delete in Middle:</strong> O(n) – need to find position, but deletion of a given node is O(1) if you have its pointer.</li>
+        <li><strong>Search:</strong> O(n) – linear search.</li>
+        <li><strong>Space Complexity:</strong> O(n) – each node stores two pointers.</li>
+      </ul>
+      <p><strong>Applications:</strong> Browser history, undo/redo, LRU cache.</p>
+      <p><strong>Advantages:</strong> Bi-directional traversal, easier deletion of a given node.</p>
+      <p><strong>Disadvantages:</strong> Extra memory for prev pointer.</p>
+    `;
+  } else if (key === 'circular-ll') {
+    infoTitle = 'Circular Linked List';
+    infoBody = `
+      <p><strong>Circular Linked List</strong> is a linked list where the last node points back to the first node, forming a circle. It can be singly or doubly.</p>
+      <ul>
+        <li><strong>Insertion/Deletion:</strong> Similar to singly/doubly but with circular structure.</li>
+        <li><strong>Traversal:</strong> Infinite loop if not handled, useful for round-robin scheduling.</li>
+        <li><strong>Applications:</strong> Round-robin scheduling, multiplayer games, circular buffers.</li>
+        <li><strong>Space Complexity:</strong> O(n).</li>
+      </ul>
+      <p><strong>Advantages:</strong> No null termination, useful for continuous cycles.</p>
+      <p><strong>Disadvantages:</strong> Risk of infinite loops if not carefully managed.</p>
+    `;
+  } else if (key === 'ordered-ll') {
+    infoTitle = 'Ordered Linked List';
+    infoBody = `
+      <p><strong>Ordered Linked List</strong> is a linked list where elements are maintained in sorted order. Insertion finds the correct position to keep the list sorted.</p>
+      <ul>
+        <li><strong>Insert:</strong> O(n) – find position and insert.</li>
+        <li><strong>Delete:</strong> O(n) – find element and remove.</li>
+        <li><strong>Search:</strong> O(n) – but can stop early if value not found.</li>
+        <li><strong>Space Complexity:</strong> O(n).</li>
+      </ul>
+      <p><strong>Applications:</strong> Maintaining sorted data without a full array sort.</p>
+      <p><strong>Advantages:</strong> Always sorted, efficient for sequential access.</p>
+      <p><strong>Disadvantages:</strong> Insert and delete are O(n) due to search.</p>
+    `;
+  } else {
+    // Fallback (should not appear because button hidden)
+    infoTitle = 'Information';
+    infoBody = `<p>General information not available for this structure.</p>`;
+  }
+
+  document.getElementById('explain-title').textContent = infoTitle;
+  document.getElementById('explain-body').innerHTML = infoBody;
+  document.getElementById('explain-panel').classList.add('open');
+  document.getElementById('explain-overlay').classList.add('open');
+}
 
 function openExplain() {
   const key = state.algo;
@@ -2974,29 +2130,13 @@ function genInsertionSteps(arr) {
 }
 
 function genMergeSteps(arr) {
-  // Video-accurate merge sort visualization:
-  // - Row 0: full array (white cells)
-  // - Splitting adds a child row below the ACTIVE subarray
-  // - Children stay visible during merge so user sees source arrays
-  // - Merge builds parent cells green one-by-one
-  // - Comparison shown as blue-circle-ring over green source cell
-  // - After merge completes, children are removed
-  //
-  // Step shape:
-  // { mergeTree, phase, rows:[{id,l,r,rowY,values,state}],
-  //   compareL, compareR,   <- global indices of cells being compared
-  //   circleL, circleR,     <- same, shown as circle ring
-  //   placedParentIdx,      <- global index just placed into parent
-  //   msg, codeLine }
-
   const steps = [];
   const orig  = [...arr];
   const n     = orig.length;
-  const work  = [...orig];   // working copy modified by merge
+  const work  = [...orig];
 
-  // Each node: {id, l, r, depth, values:[], state:'idle'|'sorted'|'merging'}
   let nextId = 0;
-  const allNodes = new Map();   // id → node (persists whole lifetime)
+  const allNodes = new Map();
 
   function makeNode(l, r, depth) {
     const id = nextId++;
@@ -3005,7 +2145,6 @@ function genMergeSteps(arr) {
     return nd;
   }
 
-  // The "visible" set is what gets snapshotted each step
   const visible = new Set();
 
   function snap(phase, msg, extra = {}) {
@@ -3024,99 +2163,86 @@ function genMergeSteps(arr) {
       activeId:        extra.activeId        ?? -1,
       msg,
       codeLine: extra.codeLine || 0,
+      codeLines: extra.codeLines || null,
     });
   }
 
-  // Root
   const root = makeNode(0, n - 1, 0);
   visible.add(root.id);
   snap('split', `Merge Sort: array [${orig.join(', ')}]. Will split left-first.`,
-    { activeId: root.id, codeLine: 1 });
+    { activeId: root.id, codeLine: 10, codeLines: { cpp: 10, python: 10, java: 10, csharp: 10 } }); // line 11 (1‑based) -> index 10
 
   function recurse(nd) {
     const { l, r, id } = nd;
-
     if (l >= r) {
       nd.state = 'sorted';
       nd.values = [work[l]];
       snap('split', `[${work[l]}] — single element, already sorted.`,
-        { activeId: id, codeLine: 3 });
+        { activeId: id, codeLine: 10, codeLines: { cpp: 10, python: 10, java: 10, csharp: 10 } });
       return;
     }
-
-    const m   = (l + r) >> 1;
+    const m = (l + r) >> 1;
     const lnd = makeNode(l,   m,   nd.depth + 1);
     const rnd = makeNode(m+1, r,   nd.depth + 1);
-
-    // Show left child appearing
     nd.state = 'idle';
     visible.add(lnd.id);
     snap('split',
       `Split [${work.slice(l,r+1).join(', ')}] → left [${work.slice(l,m+1).join(', ')}]`,
-      { activeId: lnd.id, codeLine: 2 });
-
-    // Recurse LEFT
+      { activeId: lnd.id, codeLine: 10, codeLines: { cpp: 10, python: 10, java: 10, csharp: 10 } });
     recurse(lnd);
-
-    // Show right child appearing
     visible.add(rnd.id);
     snap('split',
       `Now split right half [${work.slice(m+1,r+1).join(', ')}]`,
-      { activeId: rnd.id, codeLine: 2 });
-
-    // Recurse RIGHT
+      { activeId: rnd.id, codeLine: 10, codeLines: { cpp: 10, python: 10, java: 10, csharp: 10 } });
     recurse(rnd);
 
-    // ── MERGE ──
     nd.state = 'merging';
-    nd.values = new Array(r - l + 1).fill(null);   // empty slots in parent
+    nd.values = new Array(r - l + 1).fill(null);
     snap('merge',
       `Merging [${lnd.values.join(', ')}] + [${rnd.values.join(', ')}]`,
-      { activeId: id, codeLine: 7 });
+      { activeId: id, codeLine: 11, codeLines: { cpp: 11, python: 11, java: 11, csharp: 11 } }); // line 12 (1‑based) -> index 11
 
     const Lv = [...lnd.values];
     const Rv = [...rnd.values];
     let i = 0, j = 0, k = 0;
-
     while (i < Lv.length && j < Rv.length) {
-      // Show comparison with blue circle ring on both candidates
       snap('merge',
         `Compare ${Lv[i]} vs ${Rv[j]}`,
-        { activeId: id, compareL: l + i, compareR: m + 1 + j, codeLine: 9 });
-
+        { activeId: id, compareL: l + i, compareR: m + 1 + j,
+          codeLine: 3, codeLines: { cpp: 3, python: 3, java: 3, csharp: 3 } }); // line 4 (1‑based) -> index 3
       const fromLeft = Lv[i] <= Rv[j];
       const sourceIdx = fromLeft ? l + i : m + 1 + j;
       const winner = fromLeft ? Lv[i++] : Rv[j++];
       work[l + k] = winner;
       nd.values[k] = winner;
-
       snap('merge',
         `Place ${winner} → merged[${k}]`,
-        { activeId: id, placedParentIdx: l + k, placedSourceIdx: sourceIdx, codeLine: 10 });
+        { activeId: id, placedParentIdx: l + k, placedSourceIdx: sourceIdx,
+          codeLine: 4, codeLines: { cpp: 4, python: 4, java: 4, csharp: 4 } }); // line 5 (1‑based) -> index 4
       k++;
     }
     while (i < Lv.length) {
       work[l + k] = Lv[i];
       nd.values[k] = Lv[i];
       snap('merge', `Copy left remainder: ${Lv[i]}`,
-        { activeId: id, placedParentIdx: l + k, placedSourceIdx: l + i, codeLine: 11 });
+        { activeId: id, placedParentIdx: l + k, placedSourceIdx: l + i,
+          codeLine: 5, codeLines: { cpp: 5, python: 5, java: 5, csharp: 5 } }); // line 6 (1‑based) -> index 5
       i++; k++;
     }
     while (j < Rv.length) {
       work[l + k] = Rv[j];
       nd.values[k] = Rv[j];
       snap('merge', `Copy right remainder: ${Rv[j]}`,
-        { activeId: id, placedParentIdx: l + k, placedSourceIdx: m + 1 + j, codeLine: 11 });
+        { activeId: id, placedParentIdx: l + k, placedSourceIdx: m + 1 + j,
+          codeLine: 6, codeLines: { cpp: 6, python: 6, java: 6, csharp: 6 } }); // line 7 (1‑based) -> index 6
       j++; k++;
     }
-
     nd.state = 'sorted';
-    // Remove children — merged into parent
     visible.delete(lnd.id);
     visible.delete(rnd.id);
     snap('merge',
       `Merged → [${nd.values.join(', ')}]`,
-      { activeId: id, codeLine: 12 });
+      { activeId: id, codeLine: 11, codeLines: { cpp: 11, python: 11, java: 11, csharp: 11 } });
   }
 
   recurse(root);
@@ -3124,24 +2250,13 @@ function genMergeSteps(arr) {
   root.state = 'sorted';
   snap('done', `✅ Array sorted! [${work.join(', ')}]`,
     { activeId: root.id, codeLine: -1 });
-
   const last = steps[steps.length - 1];
   last.arr    = [...work];
   last.sorted = Array.from({ length: n }, (_, k) => k);
-
   return steps;
 }
 
-function genQuickSteps(arr) {
-  // Lomuto partition — pivot = a[lo] (first element)
-  // i = boundary pointer  (starts at lo, last element known ≤ pivot)
-  // j = scanner pointer   (starts at lo+1, scans right to hi)
-  // When a[j] ≤ pivot: i++, swap(a[i], a[j])
-  // Final: swap(a[lo], a[i])  →  pivot lands at i
-  //
-  // Both i and j move RIGHT — matches PDF images exactly.
-  // Tree rows accumulated like merge sort.
-
+ function genQuickSteps(arr) {
   const steps    = [];
   const a        = [...arr];
   const n        = a.length;
@@ -3150,6 +2265,16 @@ function genQuickSteps(arr) {
   let rowId      = 0;
 
   function snap(lo, hi, pivotIdx, pivotVal, iPtr, jPtr, phase, msg) {
+    let codeLine = 0;
+    let codeLines = { cpp: 0, python: 0, java: 0, csharp: 0 };
+    switch (phase) {
+      case 'select': codeLine = 1; break;
+      case 'scan':   codeLine = 4; break;
+      case 'swap':   codeLine = 6; break;
+      case 'place':  codeLine = 9; break;
+      default: codeLine = 0;
+    }
+    codeLines = { cpp: codeLine, python: codeLine, java: codeLine, csharp: codeLine };
     steps.push({
       quickPartition: true,
       arr:      [...a],
@@ -3157,38 +2282,33 @@ function genQuickSteps(arr) {
       lo, hi,
       pivotIdx,
       pivotVal,
-      leftPtr:  iPtr,   // i — boundary
-      rightPtr: jPtr,   // j — scanner
+      leftPtr:  iPtr,
+      rightPtr: jPtr,
       phase,
       sorted:   [...sortedSet],
       msg,
+      codeLine,
+      codeLines,
     });
   }
 
   function partition(lo, hi, depth) {
     const pivotVal = a[lo];
     const rid = rowId++;
-
     rowList = [...rowList, {
       id: rid, lo, hi, depth,
       values: a.slice(lo, hi + 1),
       state: 'active',
     }];
-
-    // Announce pivot
     snap(lo, hi, lo, pivotVal, lo, lo + 1, 'select',
       `Pivot = a[${lo}] = ${pivotVal}  Subarray: [${a.slice(lo,hi+1).join(', ')}]`);
 
-    let i = lo;      // boundary: a[lo+1..i] ≤ pivot  (starts at pivot itself)
-    let j = lo + 1;  // scanner: moves right
-
+    let i = lo;
+    let j = lo + 1;
     while (j <= hi) {
-      // Show j scanning current cell
       snap(lo, hi, lo, pivotVal, i, j, 'scan',
         `j=${j}: a[${j}]=${a[j]} ${a[j] <= pivotVal ? '≤' : '>'} pivot ${pivotVal}`);
-
       if (a[j] <= pivotVal) {
-        // a[j] belongs in left partition → i++, swap
         i++;
         if (i !== j) {
           [a[i], a[j]] = [a[j], a[i]];
@@ -3202,8 +2322,6 @@ function genQuickSteps(arr) {
       }
       j++;
     }
-
-    // Place pivot at i: swap a[lo] ↔ a[i]
     [a[lo], a[i]] = [a[i], a[lo]];
     sortedSet.add(i);
     rowList = rowList.map(r => r.id===rid
@@ -3211,7 +2329,6 @@ function genQuickSteps(arr) {
       : r);
     snap(lo, hi, i, pivotVal, i, hi, 'place',
       `Pivot ${pivotVal} → placed at [${i}]  Left < ${pivotVal}: [${a.slice(lo,i).join(',')}]  Right ≥ ${pivotVal}: [${a.slice(i+1,hi+1).join(',')}]`);
-
     return i;
   }
 
@@ -3221,13 +2338,10 @@ function genQuickSteps(arr) {
     qs(lo, p - 1, depth + 1);
     qs(p + 1, hi, depth + 1);
   }
-
   qs(0, n - 1, 0);
-
   sortedSet.clear();
   for (let k = 0; k < n; k++) sortedSet.add(k);
   rowList = rowList.map(r => ({...r, state:'sorted', values:a.slice(r.lo,r.hi+1)}));
-
   steps.push({
     quickPartition: true,
     arr: [...a], rows: rowList.map(r=>({...r, values:[...r.values]})),
@@ -3237,6 +2351,8 @@ function genQuickSteps(arr) {
     phase: 'done',
     sorted: [...sortedSet],
     msg: '✅ Array fully sorted!',
+    codeLine: -1,
+    codeLines: { cpp: -1, python: -1, java: -1, csharp: -1 }
   });
   steps[steps.length-1].sorted = Array.from({length:n},(_,k)=>k);
   return steps;
@@ -3271,16 +2387,12 @@ function genHeapSteps(arr) {
 }
 
 function genCountingSteps(arr) {
-  // Emits {multiArray:true} steps so drawMultiArray renders three labelled rows:
-  //   ROW 0 — ORIGINAL  (read-only reference, active cell highlighted)
-  //   ROW 1 — COUNT[]   (frequency bucket, active bucket highlighted)
-  //   ROW 2 — OUTPUT[]  (being filled left-to-right, active cell highlighted)
   const steps = [];
   const orig  = [...arr];
   const n     = orig.length;
   const max   = Math.max(...orig);
   const count = new Array(max + 1).fill(0);
-  const output = new Array(n).fill(null);   // null = empty slot
+  const output = new Array(n).fill(null);
 
   function snap(msg, codeLine, activeOrig, activeCount, activeOutput) {
     steps.push({
@@ -3293,60 +2405,84 @@ function genCountingSteps(arr) {
       activeOutput: activeOutput!== undefined ? activeOutput: -1,
       msg,
       codeLine: codeLine || 0,
+      codeLines: { cpp: codeLine || 0, python: codeLine || 0, java: codeLine || 0, csharp: codeLine || 0 }
     });
   }
 
-  // ── Phase 1: initialise ──
-  snap(`Max value = ${max}. Create count array of size ${max + 1}, all zeros.`, 1);
-
-  // ── Phase 2: count frequencies ──
+  snap(`Max value = ${max}. Create count array of size ${max + 1}, all zeros.`, 0); // line 1 -> index 0
+  snap(`Initialize count array.`, 1);                                            // line 2 -> index 1
   for (let i = 0; i < n; i++) {
     const val = orig[i];
-    snap(`Reading orig[${i}] = ${val}. About to increment count[${val}].`, 3, i, val, -1);
+    snap(`Reading orig[${i}] = ${val}. About to increment count[${val}].`, 2, i, val, -1); // line 3 -> index 2
     count[val]++;
-    snap(`count[${val}] is now ${count[val]}.`, 3, i, val, -1);
+    snap(`count[${val}] is now ${count[val]}.`, 2, i, val, -1);
   }
-
-  // ── Phase 3: build output array from count ──
-  snap(`Counting done. Now build OUTPUT array from COUNT.`, 5);
+  snap(`Counting done. Now build OUTPUT array from COUNT.`, 4); // line 5 -> index 4
   let outIdx = 0;
   for (let v = 0; v <= max; v++) {
     const freq = count[v];
     if (freq === 0) continue;
-    snap(`count[${v}] = ${freq}. Will place ${freq}× the value ${v} into OUTPUT.`, 5, -1, v, outIdx);
+    snap(`count[${v}] = ${freq}. Will place ${freq}× the value ${v} into OUTPUT.`, 4, -1, v, outIdx);
     for (let k = 0; k < freq; k++) {
       output[outIdx] = v;
-      snap(`Placed ${v} at output[${outIdx}].`, 6, -1, v, outIdx);
+      snap(`Placed ${v} at output[${outIdx}].`, 5, -1, v, outIdx); // line 6 -> index 5
       outIdx++;
     }
   }
-
-  // ── Done ──
   snap(`OUTPUT complete — array is sorted! ✅`, -1);
-  // Final step uses arr format so setStep knows it's done
   steps[steps.length - 1].sorted = Array.from({length: n}, (_, k) => k);
   return steps;
 }
 
 function genRadixSteps(arr) {
   const steps = [];
-  const a=[...arr],max=Math.max(...a);
-  for(let exp=1;max/exp>=1;exp*=10){
-    steps.push({arr:[...a],msg:`Processing digit position ${exp} (ones/tens/hundreds...)`,codeLine:2});
-    const out=new Array(a.length),cnt=new Array(10).fill(0);
-    for(let x of a){cnt[Math.floor(x/exp)%10]++;}
-    for(let i=1;i<10;i++) cnt[i]+=cnt[i-1];
-    for(let i=a.length-1;i>=0;i--){
-      const d=Math.floor(a[i]/exp)%10;
-      out[--cnt[d]]=a[i];
-      steps.push({arr:[...a],current:[i],msg:`Digit of ${a[i]} at exp ${exp} is ${d}`,codeLine:9});
-    }
-    a.splice(0,a.length,...out);
-    steps.push({arr:[...a],msg:`After pass with exp=${exp}: [${a.slice(0,8).join(',')}...]`,codeLine:10});
+  
+  // EDIT 1: Force values to Numbers so Math.max doesn't return NaN on HTML strings!
+  let a = arr.map(n => Number(n) || 0); 
+  const max = a.length > 0 ? Math.max(...a) : 0;
+  let exp = 1;
+
+  function snap(label, compIndex = -1, swapIndex = -1, buckets = null) {
+    steps.push({
+      radixStep: true,
+      arr: [...a],
+      buckets: buckets ? JSON.parse(JSON.stringify(buckets)) : null,
+      comp: compIndex !== -1 ? [compIndex] : [],
+      swap: swapIndex !== -1 ? [swapIndex] : [],
+      label: label || '',
+    });
   }
-  steps.push({arr:[...a],sorted:Array.from({length:a.length},(_,k)=>k),msg:'Array sorted!',codeLine:-1});
+
+  if (max > 0) {
+    while (Math.floor(max / exp) > 0) {
+      snap(`Pass for digit position ${exp} (${exp === 1 ? 'ones' : exp === 10 ? 'tens' : 'hundreds'})`);
+
+      let buckets = Array.from({ length: 10 }, () => []);
+      for (let i = 0; i < a.length; i++) {
+        const val = a[i];
+        if (val === null) continue;
+        const digit = Math.floor(val / exp) % 10;
+        snap(`Extracting digit ${digit} from ${val}`, i, -1, buckets);
+        buckets[digit].push(val);
+        a[i] = null;
+        snap(`Placed ${val} into bucket [${digit}]`, -1, -1, buckets);
+      }
+      let idx = 0;
+      for (let b = 0; b < 10; b++) {
+        while (buckets[b].length) {
+          const val = buckets[b].shift();
+          a[idx] = val;
+          snap(`Collecting ${val} back to array`, -1, idx, buckets);
+          idx++;
+        }
+      }
+      exp *= 10;
+    }
+  }
+  snap('Array sorted!', -1, -1, null);
   return steps;
 }
+
 
 function genLinearSearchSteps(arr) {
   const steps = [];
@@ -3653,13 +2789,19 @@ function drawStep(idx) {
     return;
   }
 
+  // EDIT 3: Tells the animation engine to use your Buckets drawer, not the standard bars!
+  if (state.algo === 'radix' || (step && step.radixStep)) {
+    if (typeof drawRadixStep === 'function') {
+      drawRadixStep(step || { arr: [...arr], buckets: [], comp: [], swap: [], sorted: [] });
+    }
+    return; // Stops here so it doesn't accidentally try to draw normal bars!
+  }
+
   const n      = arr.length;
   const isLight = document.body.classList.contains('light');
-  // Animation offsets — if an element has an entry in _anim.offsets, apply it
-  const offsets = _anim.active ? _anim.offsets : {};
+  const offsets = (typeof _anim !== 'undefined' && _anim.active) ? _anim.offsets : {};
 
-  if (sortViewMode === 'cells') {
-    // ── CELL MODE ─────────────────────────────────────────
+  if (typeof sortViewMode !== 'undefined' && sortViewMode === 'cells') {
     const cellW = 52, cellH = 52, gap = 4;
     const totalContentW = n * (cellW + gap) - gap + 32;
 
@@ -3671,7 +2813,6 @@ function drawStep(idx) {
 
     ctx.clearRect(0, 0, W, H);
 
-    // Subtle grid
     ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)';
     ctx.lineWidth = 1;
     for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
@@ -3683,8 +2824,7 @@ function drawStep(idx) {
     const defaultBorder = isLight ? '#8080c0' : '#4444aa';
     const idxColor      = isLight ? '#6666aa' : '#8888aa';
 
-    // Draw swap direction arrow (only when NOT animating — animation handles the movement)
-    if (!_anim.active && step && step.swap && step.swap.length === 2) {
+    if (typeof _anim !== 'undefined' && !_anim.active && step && step.swap && step.swap.length === 2) {
       const [si, sj] = step.swap;
       const ax1 = startX + si * (cellW + gap) + cellW/2;
       const ax2 = startX + sj * (cellW + gap) + cellW/2;
@@ -3705,12 +2845,11 @@ function drawStep(idx) {
       drawHead(ax2,  1);
     }
 
-    // Draw non-animated cells first (back layer)
     arr.forEach((val, i) => {
-      if (offsets[i]) return; // skip animated elements in first pass
+      if (offsets[i]) return; 
       const x = startX + i * (cellW + gap);
       const y = startY;
-      const accent = getStepColor(i, step);
+      const accent = typeof getStepColor === 'function' ? getStepColor(i, step) : null;
       const bg     = accent || defaultBg;
       const border = accent || defaultBorder;
 
@@ -3735,10 +2874,9 @@ function drawStep(idx) {
       ctx.fillText(i, x + cellW/2, y + cellH + 14);
     });
 
-    // Draw animated cells on top (front layer) — these have offsets
     arr.forEach((val, i) => {
       const o = offsets[i];
-      if (!o) return; // only draw animated elements in second pass
+      if (!o) return; 
       const baseX = startX + i * (cellW + gap);
       const baseY = startY;
       const dx = o.dx || 0;
@@ -3746,19 +2884,17 @@ function drawStep(idx) {
       const sc = o.scale || 1;
       const glow = o.glow || 0;
       const glowCol = o.glowColor || '#ff6584';
-      const accent = getStepColor(i, step);
+      const accent = typeof getStepColor === 'function' ? getStepColor(i, step) : null;
       const bg     = accent || defaultBg;
       const border = accent || defaultBorder;
 
       ctx.save();
-      // Apply transform: translate to center, scale, translate back
       const cx = baseX + dx + cellW/2;
       const cy = baseY + dy + cellH/2;
       ctx.translate(cx, cy);
       ctx.scale(sc, sc);
       ctx.translate(-cellW/2, -cellH/2);
 
-      // Glow aura behind element
       if (glow > 0) {
         ctx.shadowColor = glowCol;
         ctx.shadowBlur = glow;
@@ -3777,14 +2913,12 @@ function drawStep(idx) {
 
       ctx.restore();
 
-      // Index label (not scaled)
       ctx.fillStyle = idxColor;
       ctx.font = isLight ? 'bold 9px JetBrains Mono' : '9px JetBrains Mono';
       ctx.textAlign = 'center';
       ctx.fillText(i, baseX + cellW/2, baseY + cellH + 14);
     });
 
-    // Watermark when large
     if (n > 30) {
       ctx.fillStyle = isLight ? 'rgba(0,0,0,0.25)' : 'rgba(136,136,170,0.4)';
       ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
@@ -3792,7 +2926,6 @@ function drawStep(idx) {
     }
 
   } else {
-    // ── BAR MODE ────────────────────────────────────────────────────
     canvas.width  = panelW;
     canvas.height = panelH;
     setDsScroll(false);
@@ -3800,13 +2933,12 @@ function drawStep(idx) {
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    // Grid
     ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)';
     ctx.lineWidth = 1;
     for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
     for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-    const maxVal = Math.max(...arr, 1);
+    const maxVal = Math.max(...arr.map(x => Number(x)||0), 1);
     const gap    = n > 60 ? 1 : n > 40 ? 1 : 2;
     const barW   = Math.max(2, Math.floor((W - 20) / n) - gap);
     const totalW = n * (barW + gap) - gap;
@@ -3819,8 +2951,7 @@ function drawStep(idx) {
 
     const defaultBarColor = isLight ? '#6c63ff' : '#3d3d6b';
 
-    // Swap direction arrow (only when NOT animating)
-    if (!_anim.active && step && step.swap && step.swap.length === 2) {
+    if (typeof _anim !== 'undefined' && !_anim.active && step && step.swap && step.swap.length === 2) {
       const [si, sj] = step.swap;
       const ax1 = startX + si * (barW + gap) + barW/2;
       const ax2 = startX + sj * (barW + gap) + barW/2;
@@ -3836,13 +2967,12 @@ function drawStep(idx) {
       });
     }
 
-    // Draw non-animated bars first (back layer)
     arr.forEach((val, i) => {
-      if (offsets[i]) return; // skip animated bars
-      const barH = Math.max(2, (val / maxVal) * maxH);
+      if (offsets[i]) return; 
+      const barH = Math.max(2, (Number(val) / maxVal) * maxH);
       const x = startX + i * (barW + gap);
       const y = H - barH - botPad;
-      const accent = getStepColor(i, step);
+      const accent = typeof getStepColor === 'function' ? getStepColor(i, step) : null;
       const color  = accent || defaultBarColor;
 
       if (barW > 4) { ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(x+2,y+2,barW,barH); }
@@ -3862,11 +2992,10 @@ function drawStep(idx) {
       }
     });
 
-    // Draw animated bars on top (front layer)
     arr.forEach((val, i) => {
       const o = offsets[i];
-      if (!o) return; // only animated bars
-      const barH = Math.max(2, (val / maxVal) * maxH);
+      if (!o) return; 
+      const barH = Math.max(2, (Number(val) / maxVal) * maxH);
       const baseX = startX + i * (barW + gap);
       const baseY = H - barH - botPad;
       const dx = o.dx || 0;
@@ -3874,24 +3003,21 @@ function drawStep(idx) {
       const sc = o.scale || 1;
       const glow = o.glow || 0;
       const glowCol = o.glowColor || '#ff6584';
-      const accent = getStepColor(i, step);
+      const accent = typeof getStepColor === 'function' ? getStepColor(i, step) : null;
       const color  = accent || defaultBarColor;
 
       ctx.save();
-      // Scale around the base center of the bar
       const cx = baseX + dx + barW/2;
       const cy = baseY + dy + barH;
       ctx.translate(cx, cy);
       ctx.scale(sc, sc);
       ctx.translate(-barW/2, -barH);
 
-      // Glow effect
       if (glow > 0) {
         ctx.shadowColor = glowCol;
         ctx.shadowBlur = glow;
       }
 
-      // Ghost trail for moving bars
       if (Math.abs(dx) > 1) {
         ctx.fillStyle = glowCol + '18';
         ctx.fillRect(-dx * 0.15, 0, barW, barH);
@@ -3900,7 +3026,6 @@ function drawStep(idx) {
       if (barW >= 4) {
         ctx.beginPath(); ctx.roundRect(0, 0, barW, barH, [3,3,0,0]);
         ctx.fillStyle = color; ctx.fill();
-        // Extra border for animated bars
         ctx.strokeStyle = glowCol; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.roundRect(0, 0, barW, barH, [3,3,0,0]); ctx.stroke();
       } else {
@@ -3908,7 +3033,6 @@ function drawStep(idx) {
       }
       ctx.shadowBlur = 0;
 
-      // Value label on animated bar
       if (showValLabel) {
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${Math.min(11,barW+2)}px JetBrains Mono`;
@@ -3919,7 +3043,6 @@ function drawStep(idx) {
       ctx.restore();
     });
 
-    // Index labels
     if (barW >= 5) {
       const stride = barW >= 10 ? 1 : barW >= 6 ? 2 : 5;
       ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'center';
@@ -4891,7 +4014,7 @@ Object.defineProperty(window,'bstRoot',{get:()=>dsState.bst,set:v=>{dsState.bst=
 // DATA STRUCTURE VISUALIZATIONS
 // =====================================================
 
-function drawStack() {
+function drawStack(isAnimated = false) {
   const panel = document.getElementById('viz-panel');
   const panelW = panel.clientWidth || 600;
   const panelH = panel.clientHeight || 260;
@@ -4899,47 +4022,50 @@ function drawStack() {
   const isLight = document.body.classList.contains('light');
 
   const boxW = 140, boxH = 40, boxGap = 4;
-  const labelArea = 48;  // top area for STACK label
-  const totalContentH = labelArea + items.length * (boxH + boxGap) + 20;
+  const step = boxH + boxGap;
+
+  // Determine the total height needed for the stack content (including the container outline)
+  const maxLen = isAnimated && _stackAnim.active ? Math.max(_stackAnim.oldLength, items.length) : items.length;
+  const contentHeight = maxLen * step + 8; // container outline adds 8px padding? Actually we draw container with height = maxLen*step + 8
+  const labelHeight = 48; // space for title and top margin
 
   const W = panelW;
-  const H = Math.max(panelH, totalContentH);
+  const H = panelH;
+
+  // Compute yBase to center the content vertically in the panel
+  let yBase;
+  if (isFullscreen) {
+    // Center the whole stack content (title + stack area) vertically
+    const totalContentH = labelHeight + contentHeight;
+    yBase = Math.max(20, (H - totalContentH) / 2);
+  } else {
+    yBase = 48; // matches labelArea (original top margin)
+  }
+
   canvas.width = W;
   canvas.height = H;
-  setDsScroll(totalContentH > panelH);
+  setDsScroll(false); // stack doesn't need scrolling, it always fits with centering
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = isLight ? '#f4f4f8' : '#0a0a12';
   ctx.fillRect(0, 0, W, H);
 
-  // Title
   ctx.fillStyle = isLight ? '#6666aa' : '#8888aa';
   ctx.font = '12px JetBrains Mono';
   ctx.textAlign = 'center';
-  ctx.fillText('STACK (LIFO)', W / 2, 24);
+  ctx.fillText('STACK (LIFO)', W / 2, yBase - 8); // title above the stack
 
-  if (items.length === 0) {
+  if (items.length === 0 && !(isAnimated && _stackAnim.active)) {
     ctx.fillStyle = isLight ? '#555' : '#888';
     ctx.font = '13px Inter';
-    ctx.textAlign = 'center';
-    ctx.fillText('Stack is empty', W / 2, H / 2);
+    ctx.fillText('Stack is empty', W / 2, yBase + contentHeight / 2);
     return;
   }
 
   const startX = W / 2 - boxW / 2;
 
-  // Outer container rect
-  const containerH = items.length * (boxH + boxGap) + 8;
-  ctx.strokeStyle = isLight ? '#6c63ff44' : '#6c63ff44';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(startX - 2, labelArea, boxW + 4, containerH);
-
-  // Draw items — bottom of stack = index 0, top = last
-  items.forEach((val, i) => {
-    const stackPos = items.length - 1 - i;  // 0 = top of visual stack
-    const y = labelArea + 4 + stackPos * (boxH + boxGap);
-    const isTop = i === items.length - 1;
-
+  function drawBox(val, yOffset, isTop, extraStyle = {}) {
+    const y = yBase + yOffset;
     let fill, stroke, textCol;
     if (isLight) {
       fill = isTop ? '#6c63ff' : '#eef2ff';
@@ -4950,31 +4076,122 @@ function drawStack() {
       stroke = isTop ? '#8a83ff' : '#4444aa';
       textCol = '#fff';
     }
+    if (extraStyle.fill) fill = extraStyle.fill;
+    if (extraStyle.stroke) stroke = extraStyle.stroke;
+    if (extraStyle.textCol) textCol = extraStyle.textCol;
+
+    let xOffset = 0;
+    if (extraStyle.xShift) xOffset = extraStyle.xShift;
 
     ctx.fillStyle = fill;
     ctx.beginPath();
-    ctx.roundRect(startX, y, boxW, boxH, 6);
+    ctx.roundRect(startX + xOffset, y, boxW, boxH, 6);
     ctx.fill();
     ctx.strokeStyle = stroke;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(startX, y, boxW, boxH, 6);
+    ctx.roundRect(startX + xOffset, y, boxW, boxH, 6);
     ctx.stroke();
 
     ctx.fillStyle = textCol;
     ctx.font = 'bold 14px JetBrains Mono';
     ctx.textAlign = 'center';
-    ctx.fillText(String(val), startX + boxW / 2, y + boxH / 2 + 5);
+    ctx.fillText(String(val), startX + boxW / 2 + xOffset, y + boxH / 2 + 5);
 
-    if (isTop) {
+    if (isTop && !extraStyle.hideTopLabel) {
       ctx.fillStyle = isLight ? '#ff6584' : '#ffd166';
       ctx.font = '10px Inter';
-      ctx.fillText('← TOP', startX + boxW + 12, y + boxH / 2 + 4);
+      ctx.fillText('← TOP', startX + boxW + 12 + xOffset, y + boxH / 2 + 4);
     }
-  });
+  }
+
+  // ---- Animation handling ----
+  if (isAnimated && _stackAnim.active) {
+    const t = _stackAnim.t;
+    const type = _stackAnim.type;
+    const animVal = _stackAnim.value;
+    const oldLen = _stackAnim.oldLength;
+    const newLen = _stackAnim.newLength;
+
+    const ease = (type === 'push' || type === 'pop') ? easeOutBounce : easeOutCubic;
+    const progress = ease(t);
+
+    // Draw container background to avoid artifacts
+    const maxLen = Math.max(oldLen, newLen);
+    const containerHeight = maxLen * step + 8;
+    const containerX = startX - 2;
+    const containerY = yBase;
+    const containerW = boxW + 4;
+
+    ctx.fillStyle = isLight ? '#f4f4f8' : '#0a0a12';
+    ctx.fillRect(containerX, containerY, containerW, containerHeight);
+    ctx.strokeStyle = isLight ? '#6c63ff44' : '#6c63ff44';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(containerX, containerY, containerW, containerHeight);
+
+    if (type === 'push') {
+      // Existing elements shift down
+      for (let pos = 0; pos < oldLen; pos++) {
+        const oldOffset = pos * step;
+        const newOffset = (pos + 1) * step;
+        const currentOffset = oldOffset + (newOffset - oldOffset) * progress;
+        const val = items[oldLen - 1 - pos];
+        drawBox(val, currentOffset, false);
+      }
+      // New element slides from left into top position
+      const finalX = 0;
+      const startXShift = -(boxW + 80);
+      const currentX = startXShift + (finalX - startXShift) * progress;
+      drawBox(animVal, 0, true, { fill: '#22c55e', stroke: '#16a34a', xShift: currentX });
+    }
+    else if (type === 'pop') {
+      // Remaining elements stay in place (no vertical shift)
+      for (let pos = 1; pos < oldLen; pos++) {
+        const currentOffset = pos * step;
+        const val = items[oldLen - 1 - pos];
+        drawBox(val, currentOffset, false);
+      }
+      // Popped element slides to the right and fades
+      const startXShift = 0;
+      const endXShift = boxW + 80;
+      const currentX = startXShift + (endXShift - startXShift) * progress;
+      const alpha = 1 - progress;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      drawBox(animVal, 0, true, { fill: '#ff6584', stroke: '#ef4444', hideTopLabel: true, xShift: currentX });
+      ctx.restore();
+    }
+  } else {
+    // Normal drawing: from bottom to top
+    for (let i = 0; i < items.length; i++) {
+      const posFromTop = items.length - 1 - i;
+      const yOffset = posFromTop * step;
+      const isTop = (i === items.length - 1);
+      drawBox(items[i], yOffset, isTop);
+    }
+
+    if (items.length > 0) {
+      const containerHeight = items.length * step + 8;
+      ctx.strokeStyle = isLight ? '#6c63ff44' : '#6c63ff44';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(startX - 2, yBase, boxW + 4, containerHeight);
+    }
+  }
 }
 
-function drawQueue() {
+// Helper easing function (cubic out)
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeOutBounce(t) {
+  if (t < 1 / 2.75) return 7.5625 * t * t;
+  if (t < 2 / 2.75) return 7.5625 * (t - 1.5 / 2.75) * (t - 1.5 / 2.75) + 0.75;
+  if (t < 2.5 / 2.75) return 7.5625 * (t - 2.25 / 2.75) * (t - 2.25 / 2.75) + 0.9375;
+  return 7.5625 * (t - 2.625 / 2.75) * (t - 2.625 / 2.75) + 0.984375;
+}
+
+function drawQueue(isAnimated = false) {
   const panel = document.getElementById('viz-panel');
   const panelW = panel.clientWidth || 600;
   const panelH = panel.clientHeight || 260;
@@ -4982,96 +4199,141 @@ function drawQueue() {
   const isLight = document.body.classList.contains('light');
 
   const boxW = 64, boxH = 52, boxGap = 8;
-  const sidePad = 20;
-  const totalContentW = sidePad + items.length * (boxW + boxGap) - boxGap + sidePad;
+  const step = boxW + boxGap;
+  const titleHeight = 32;
 
-  const W = Math.max(panelW, totalContentW);
-  const H = panelH;
-  canvas.width = W;
-  canvas.height = H;
-  setDsScroll(totalContentW > panelW);
+  // Keep row anchored using old length during animation
+  let displayLength = items.length;
+  if (isAnimated && _queueAnim.active) {
+    displayLength = _queueAnim.oldLen;
+  }
 
-  ctx.clearRect(0, 0, W, H);
+  const contentWidth = displayLength * step;
+  const canvasW = Math.max(panelW, contentWidth + 40);
+  const canvasH = panelH;
+
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  setDsScroll(contentWidth > panelW - 40);
+
+  ctx.clearRect(0, 0, canvasW, canvasH);
   ctx.fillStyle = isLight ? '#f4f4f8' : '#0a0a12';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, canvasW, canvasH);
 
-  // Title
   ctx.fillStyle = isLight ? '#6666aa' : '#8888aa';
   ctx.font = '12px JetBrains Mono';
   ctx.textAlign = 'center';
-  ctx.fillText('QUEUE (FIFO)', W / 2, 30);
+  ctx.fillText('QUEUE (FIFO)', canvasW / 2, titleHeight - 8);
 
-  if (items.length === 0) {
+  if (items.length === 0 && !(isAnimated && _queueAnim.active)) {
     ctx.fillStyle = isLight ? '#555' : '#888';
     ctx.font = '13px Inter';
-    ctx.textAlign = 'center';
-    ctx.fillText('Queue is empty', W / 2, H / 2);
+    ctx.fillText('Queue is empty', canvasW / 2, canvasH / 2);
     return;
   }
 
-  const startY = H / 2 - boxH / 2;
-  const startX = sidePad;
+  const availableHeight = canvasH - titleHeight;
+  const startY = titleHeight + (availableHeight / 2);
+  const startX = Math.max(20, (canvasW - (displayLength * step)) / 2);
 
-  items.forEach((val, i) => {
-    const x = startX + i * (boxW + boxGap);
-    const isHead = i === 0;
-    const isTail = i === items.length - 1;
+  function drawBox(val, index, isFirst, isLast, extraStyle = {}) {
+    if (val === undefined || val === null) return;
 
+    const x = startX + index * step;
+    const y = startY - boxH / 2;
     let fill, stroke, textCol;
     if (isLight) {
-      fill = isHead ? '#43d9ad' : (isTail ? '#ff6584' : '#eef2ff');
-      stroke = isHead ? '#35c09a' : (isTail ? '#dd5070' : '#c0c0e0');
-      textCol = isHead || isTail ? '#fff' : '#1a1a2e';
+      fill = isFirst ? '#6c63ff' : (isLast ? '#ff6584' : '#eef2ff');
+      stroke = isFirst ? '#5b53e8' : (isLast ? '#ff6584' : '#c0c0e0');
+      textCol = (isFirst || isLast) ? '#fff' : '#1a1a2e';
     } else {
-      fill = isHead ? '#43d9ad' : (isTail ? '#ff6584' : '#3d3d6b');
-      stroke = isHead ? '#35c09a' : (isTail ? '#dd5070' : '#4444aa');
+      fill = isFirst ? '#6c63ff' : (isLast ? '#ff6584' : '#3d3d6b');
+      stroke = isFirst ? '#8a83ff' : (isLast ? '#ff6584' : '#4444aa');
       textCol = '#fff';
     }
+    if (extraStyle.fill) fill = extraStyle.fill;
+    if (extraStyle.stroke) stroke = extraStyle.stroke;
+    if (extraStyle.textCol) textCol = extraStyle.textCol;
+
+    let xOffset = 0;
+    if (extraStyle.xShift) xOffset = extraStyle.xShift;
 
     ctx.fillStyle = fill;
     ctx.beginPath();
-    ctx.roundRect(x, startY, boxW, boxH, 6);
+    ctx.roundRect(x + xOffset, y, boxW, boxH, 6);
     ctx.fill();
     ctx.strokeStyle = stroke;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(x, startY, boxW, boxH, 6);
+    ctx.roundRect(x + xOffset, y, boxW, boxH, 6);
     ctx.stroke();
 
     ctx.fillStyle = textCol;
     ctx.font = 'bold 13px JetBrains Mono';
     ctx.textAlign = 'center';
-    ctx.fillText(String(val), x + boxW / 2, startY + boxH / 2 + 5);
+    ctx.fillText(String(val), x + boxW / 2 + xOffset, y + boxH / 2 + 5);
 
-    if (isHead) {
-      ctx.fillStyle = isLight ? '#43d9ad' : '#43d9ad';
-      ctx.font = '9px Inter';
-      ctx.fillText('HEAD', x + boxW / 2, startY + boxH + 14);
+    if (isFirst && !extraStyle.hideFirstLabel) {
+      ctx.fillStyle = isLight ? '#ff6584' : '#ffd166';
+      ctx.font = '10px Inter';
+      ctx.fillText('FIRST', x + boxW / 2 + xOffset, y - 8);
     }
-    if (isTail) {
-      ctx.fillStyle = isLight ? '#ff6584' : '#ff6584';
-      ctx.font = '9px Inter';
-      ctx.fillText('TAIL', x + boxW / 2, startY + boxH + 14);
+    if (isLast && !extraStyle.hideLastLabel) {
+      ctx.fillStyle = isLight ? '#ff6584' : '#ffd166';
+      ctx.font = '10px Inter';
+      ctx.fillText('LAST', x + boxW / 2 + xOffset, y + boxH + 12);
     }
+  }
 
-    // Arrow between items
-    if (i < items.length - 1) {
-      const ax = x + boxW + 2, ay = startY + boxH / 2;
-      ctx.strokeStyle = isLight ? '#888' : '#555';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(ax, ay);
-      ctx.lineTo(ax + boxGap - 4, ay);
-      ctx.stroke();
-      ctx.fillStyle = isLight ? '#888' : '#555';
-      ctx.beginPath();
-      ctx.moveTo(ax + boxGap - 2, ay);
-      ctx.lineTo(ax + boxGap - 8, ay - 4);
-      ctx.lineTo(ax + boxGap - 8, ay + 4);
-      ctx.closePath();
-      ctx.fill();
+  if (isAnimated && _queueAnim.active) {
+    const t = _queueAnim.t;
+    const type = _queueAnim.type;
+    const animVal = _queueAnim.value;
+    const oldLen = _queueAnim.oldLen;
+    const newLen = _queueAnim.newLen;
+
+    const progress = easeOutCubic(t);
+
+    if (type === 'enqueue') {
+      // Existing elements stay at original positions
+      for (let i = 0; i < oldLen; i++) {
+        const val = items[i];
+        const isFirst = (i === 0);
+        const isLast = (i === oldLen - 1);
+        drawBox(val, i, isFirst, isLast);
+      }
+      // New element slides from the right – normal color, no "LAST" label
+      const finalX = 0;
+      const startXShift = boxW + 80;
+      const currentX = startXShift * (1 - progress);
+      drawBox(animVal, oldLen, false, false, { xShift: currentX, hideLastLabel: true });
     }
-  });
+    else if (type === 'dequeue') {
+      // Remaining elements appear at their new positions (stable)
+      for (let i = 0; i < newLen; i++) {
+        const val = items[i];
+        const isFirst = (i === 0);
+        const isLast = (i === newLen - 1);
+        drawBox(val, i, isFirst, isLast);
+      }
+      // Popped element slides left and fades (normal color)
+      const startXShift = 0;
+      const endXShift = -(boxW + 80);
+      const currentX = startXShift + (endXShift - startXShift) * progress;
+      const alpha = 1 - progress;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      drawBox(animVal, 0, true, false, { xShift: currentX, hideFirstLabel: true });
+      ctx.restore();
+    }
+  } else {
+    for (let i = 0; i < items.length; i++) {
+      const val = items[i];
+      const isFirst = (i === 0);
+      const isLast = (i === items.length - 1);
+      drawBox(val, i, isFirst, isLast);
+    }
+  }
 }
 
 function drawArray() {
@@ -5136,14 +4398,16 @@ function drawLinkedList(type = 'singly-ll') {
   const isLight = document.body.classList.contains('light');
 
   const dataW = 46, ptrW = 20, nodeW = dataW + ptrW, nodeH = 42;
-  const arrowGap = 40, nullW = 50, sidePad = 24;
-  const totalContentW = sidePad + items.length * (nodeW + arrowGap) - arrowGap + nullW + sidePad;
+  const arrowGap = 40;
+  let totalWidth = items.length * (nodeW + arrowGap) - arrowGap;
+  if (type !== 'circular-ll') totalWidth += 50;
+  totalWidth += 40;
 
-  const W = Math.max(panelW, totalContentW);
-  const H = Math.max(panelH, 320);
+  const W = Math.max(panelW, totalWidth);
+  const H = Math.max(panelH, 360);
   canvas.width = W;
   canvas.height = H;
-  setDsScroll(items.length > 0 && totalContentW > panelW);
+  setDsScroll(items.length > 0 && totalWidth > panelW);
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = isLight ? '#f8f8fc' : '#0a0a14';
@@ -5163,22 +4427,22 @@ function drawLinkedList(type = 'singly-ll') {
   if (items.length === 0) {
     ctx.fillStyle = isLight ? '#555' : '#888';
     ctx.font = '13px Inter';
-    ctx.textAlign = 'center';
     ctx.fillText('List is empty.', Math.min(W/2, panelW/2), H/2);
     return;
   }
 
-  // Fixed vertical position – moved up from previous centering
-  // Center the list vertically in the available space
-const y = Math.max(20, (H - nodeH) / 2-45);
-  function nx(i) { return sidePad + i * (nodeW + arrowGap); }
+  const startX = Math.max(20, (W - totalWidth) / 2);
+  function nx(i) { return startX + i * (nodeW + arrowGap); }
+  const titleSpace = 24;
+  const legendSpace = 32;
+  const available = H - titleSpace - legendSpace;
+  const y = titleSpace + (available - nodeH) / 2;
   const midY = y + nodeH / 2;
 
   // Draw nodes
   items.forEach((val, i) => {
     const x = nx(i);
     const isHead = i === 0, isTail = i === items.length - 1;
-
     let dataFill, dataStroke, textCol;
     if (isLight) {
       dataFill = isHead ? '#6c63ff' : '#eef2ff';
@@ -5219,13 +4483,12 @@ const y = Math.max(20, (H - nodeH) / 2-45);
       ctx.font = 'bold 9px Inter';
       ctx.fillText('TAIL', x + dataW/2, y - 12);
     }
-
     ctx.fillStyle = isLight ? '#888' : '#555';
     ctx.font = '8px JetBrains Mono';
     ctx.fillText(`[${i}]`, x + dataW/2, y + nodeH + 24);
   });
 
-  // Draw .next arrows
+  // Draw .next arrows (static)
   for (let i = 0; i < items.length - 1; i++) {
     const x1 = nx(i) + nodeW;
     const x2 = nx(i+1);
@@ -5252,11 +4515,11 @@ const y = Math.max(20, (H - nodeH) / 2-45);
     ctx.fillText('null', x1 + 16 + capW/2, midY + 4);
   }
 
-  // Circular back‑arrow
+  // Circular back-arrow
   if (type === 'circular-ll' && items.length > 1) {
     const tailX = nx(items.length-1) + nodeW;
     const headX = nx(0);
-    const arcY = y - 30;
+    const arcY = y - 110;
     ctx.strokeStyle = isLight ? '#ff6584cc' : '#ff6584cc';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -5274,38 +4537,19 @@ const y = Math.max(20, (H - nodeH) / 2-45);
     ctx.lineTo(headX - 9, midY + 5);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = isLight ? '#ff658499' : '#ff658499';
-    ctx.font = '9px JetBrains Mono';
-    ctx.fillText('↩ circular', (tailX + headX) / 2, arcY - 5);
   }
 
-  // Doubly LL .prev arrows
+  // Doubly LL .prev arrows (straight, parallel)
   if (type === 'doubly-ll' && items.length > 1) {
-    const prevY = y + nodeH + 22;
+    const prevY = midY + 12;
     for (let i = 1; i < items.length; i++) {
       const x1 = nx(i);
       const x2 = nx(i-1) + nodeW;
-      const cx = (x1 + x2) / 2;
-      ctx.strokeStyle = isLight ? '#ef444488' : '#ef444488';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(x1, prevY);
-      ctx.quadraticCurveTo(cx, prevY + 10, x2, prevY);
-      ctx.stroke();
-      ctx.fillStyle = isLight ? '#ef444488' : '#ef444488';
-      ctx.beginPath();
-      ctx.moveTo(x2, prevY);
-      ctx.lineTo(x2 + 9, prevY - 4);
-      ctx.lineTo(x2 + 9, prevY + 4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = isLight ? '#ef444488' : '#ef444488';
-      ctx.font = 'bold 7px JetBrains Mono';
-      ctx.fillText('.prev', cx, prevY + 12);
+      drawSolidArrow(x1, prevY, x2, prevY, '#ef4444');
     }
   }
 
-  // Legend
+  // Legend (simplified)
   const leg = [
     [isLight ? '#6c63ff' : '#43d9ad', '.next arrow'],
     [isLight ? '#ef4444' : '#ef444488', '.prev arrow'],
@@ -5320,6 +4564,42 @@ const y = Math.max(20, (H - nodeH) / 2-45);
     ctx.fillText(lbl, lx + 12, H - 6);
     lx += ctx.measureText(lbl).width + 28;
   });
+}
+
+// Helper to draw a pointer box with a stem line
+function drawPointerBox(x, y, label, color, colorName) {
+  const boxW = 48, boxH = 20;
+  const stemTop = y - 12;
+  const stemBot = y - 2;
+  ctx.beginPath();
+  ctx.moveTo(x, stemTop);
+  ctx.lineTo(x, stemBot);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, stemTop);
+  ctx.lineTo(x - 5, stemTop + 8);
+  ctx.lineTo(x + 5, stemTop + 8);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = color + '22';
+  ctx.beginPath();
+  ctx.roundRect(x - boxW/2, y, boxW, boxH, 4);
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(x - boxW/2, y, boxW, boxH, 4);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.font = 'bold 10px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x, y + boxH/2);
+  ctx.textBaseline = 'alphabetic';
 }
 
 function drawSolidArrow(x1, y1, x2, y2, color) {
@@ -5678,43 +4958,62 @@ function genLLSteps(opKey, val, pos) {
   //  ORDERED INSERT
   // ─────────────────────────────────────────
   } else if (opKey === 'orderedInsert') {
-    const numVal = Number(val);
-    snap(null, null, null,
-      `Step 1 — Create new node with value ${numVal}`, 1,
-      null, null, 'traverse');
-    if (list.length === 0 || numVal <= list[0]) {
-      snap(list.length > 0 ? 0 : null, {idx:0, val:numVal}, null,
-        list.length === 0
-          ? 'Step 2 — List is empty. New node becomes HEAD.'
-          : `Step 2 — ${numVal} ≤ HEAD (${list[0]}) → insert before HEAD`,
-        3, null, list.length > 0 ? 0 : null, 'insert');
-      list.splice(0, 0, numVal);
-      snap(0, null, null,
-        `✅ Done — Inserted ${numVal} at beginning. Sorted order maintained.`, 4,
-        null, null, 'done');
+  const numVal = Number(val);
+  // Step 1: create node
+  snap(null, null, null,
+    `Step 1 — Create new node with value ${numVal}`, 1,
+    null, null, 'traverse');
+
+  if (list.length === 0 || numVal <= list[0]) {
+    // Insert at head
+    if (list.length === 0) {
+      snap(null, {idx:0, val:numVal}, null,
+        `Step 2 — List is empty. New node becomes HEAD.`, 3,
+        null, null, 'insert');
     } else {
-      snap(0, null, null,
-        `Step 2 — ${numVal} > HEAD (${list[0]}). Start traversal.`, 7,
-        null, 1, 'traverse');
-      let i = 0;
-      while (i < list.length - 1 && list[i + 1] < numVal) {
-        snap(i, null, null,
-          `Step ${i+3} — node[${i}]=${list[i]}, next=${list[i+1]} < ${numVal}. Keep going.`, 8,
-          i > 0 ? i-1 : null, i+1, 'traverse');
-        i++;
-      }
-      snap(i, {idx: i+1, val: numVal}, null,
-        `Step ${i+3} — Stop at node ${list[i]}. next = ${list[i+1] ?? 'null'} ≥ ${numVal}. Insert here.`, 11,
-        i, i+1 < list.length ? i+1 : null, 'found');
-      snap(i, {idx: i+1, val: numVal}, null,
-        `Step ${i+4} — Redirect pointers to splice in new node`, 12,
-        i, i+1 < list.length ? i+1 : null, 'rewire');
-      list.splice(i + 1, 0, numVal);
-      snap(i + 1, null, null,
-        `✅ Done — Inserted ${numVal}. Sorted list: [${list.join(' → ')}]`, 12,
-        null, null, 'done');
+      snap(0, {idx:0, val:numVal}, null,
+        `Step 2 — ${numVal} ≤ HEAD (${list[0]}) → insert before HEAD`, 3,
+        null, 0, 'insert');
     }
+    // Insert the node (will be animated by 'insert' phase)
+    list.splice(0, 0, numVal);
+    // After insertion, show done
+    snap(0, null, null,
+      `✅ Done — Inserted ${numVal} at beginning. Sorted order maintained.`, 4,
+      null, null, 'done');
+  } else {
+    // Step 2: start traversal
+    snap(0, null, null,
+      `Step 2 — ${numVal} > HEAD (${list[0]}). Start traversal.`, 7,
+      null, 1, 'traverse');
+    let i = 0;
+    // Traverse to find insertion point
+    while (i < list.length - 1 && list[i + 1] < numVal) {
+      snap(i, null, null,
+        `Step ${i+3} — node[${i}]=${list[i]}, next=${list[i+1]} < ${numVal}. Keep going.`, 8,
+        i > 0 ? i-1 : null, i+1, 'traverse');
+      i++;
+    }
+    // Found insertion point
+    snap(i, {idx: i+1, val: numVal}, null,
+      `Step ${i+3} — Stop at node ${list[i]}. next = ${list[i+1] ?? 'null'} ≥ ${numVal}. Insert here.`, 11,
+      i, i+1 < list.length ? i+1 : null, 'found');
+    // Insert step (new node appears)
+    snap(i, {idx: i+1, val: numVal}, null,
+      `Step ${i+4} — New node appears at position ${i+1}`, 11,
+      i, i+1 < list.length ? i+1 : null, 'insert');
+    // Actually insert the node
+    list.splice(i + 1, 0, numVal);
+    // Rewire step (pointer redirection)
+    snap(i, null, null,
+      `Step ${i+5} — Redirect pointers to attach new node`, 12,
+      i, i+2 < list.length ? i+2 : null, 'rewire');
+    // Done
+    snap(i + 1, null, null,
+      `✅ Done — Inserted ${numVal}. Sorted list: [${list.join(' → ')}]`, 12,
+      null, null, 'done');
   }
+}
 
   return steps;
 }
@@ -5764,13 +5063,13 @@ function _animateLLStep(stepIdx, prevStepIdx, callback) {
 
   // Duration per phase — deliberately slower so user can follow pointers
   const dur = {
-    traverse: Math.max(500,  1200 - speed * 68),
-    found:    Math.max(600,  1400 - speed * 80),
-    rewire:   Math.max(800,  1800 - speed * 100),
-    insert:   Math.max(900,  2000 - speed * 110),
-    delete:   Math.max(800,  1800 - speed * 100),
-    done:     Math.max(400,  1000 - speed * 60),
-  }[phase] || Math.max(500, 1000 - speed * 50);
+  traverse: Math.max(500, 1200 - speed * 68),
+  found:    Math.max(600, 1400 - speed * 80),
+  rewire:   Math.max(1200, 2400 - speed * 140),
+  insert:   Math.max(1400, 3000 - speed * 140),
+  delete:   Math.max(800, 1800 - speed * 100),
+  done:     Math.max(400, 1000 - speed * 60),
+}[phase] || Math.max(500, 1000 - speed * 50);
 
   _llAnim.active = true;
   _llAnim.phase = phase;
@@ -5801,591 +5100,556 @@ function _animateLLStep(stepIdx, prevStepIdx, callback) {
 // ao = animation override: { t, phase, animating }
 // t = 0→1 animation progress
 // =====================================================
+// --- KEEP THIS OUTSIDE THE FUNCTION ---
+// --- KEEP THIS OUTSIDE THE FUNCTION ---
+// --- KEEP THIS OUTSIDE THE FUNCTION ---
+// --- KEEP THIS OUTSIDE THE FUNCTION ---
+// --- KEEP THIS OUTSIDE THE FUNCTION ---
+const stepCache = new WeakMap();
+
 function drawLinkedListStep(step, ao) {
-  const type  = state.algo;
-  const items = step.list;
-  const t     = ao?.t ?? 1;
+  const type = state.algo || 'singly-ll';
+  let items = [...(step.list || [])]; // Clone to allow safe sanitization
+  let t = ao?.t ?? 1;
   const animPhase = ao?.phase ?? (step.phase || 'traverse');
   const animating = ao?.animating ?? false;
 
-  const panel   = document.getElementById('viz-panel');
-  const panelW  = panel.clientWidth  || 600;
-  const panelH  = panel.clientHeight || 300;
-  const dataW = 46, ptrW = 20, nodeW = dataW + ptrW, nodeH = 42;
-  const arrowGap = 40, nullW = 50, sidePad = 24;
-  const totalContentW = sidePad + items.length * (nodeW + arrowGap) - arrowGap + nullW + sidePad;
+  // --- ANTI-FLASH LOCK ---
+  if (step && typeof step === 'object') {
+    let sState = stepCache.get(step);
+    if (!sState) { sState = { finished: false }; stepCache.set(step, sState); }
+    if (animating && t < 0.1) sState.finished = false; 
+    if (animating && t > 0.95) sState.finished = true; 
+    if (!animating && sState.finished && t < 0.5) { t = 1; }
+  }
 
-  const W = Math.max(panelW, totalContentW);
-  const H = Math.max(panelH, 360); // extra height for floating messages
-  canvas.width  = W;
+  // --- EARLY MUTATION SANITIZER & TAIL INSERTION FIX ---
+  const isInsertPhase = animPhase.toLowerCase().includes('insert');
+  const isRewirePhase = animPhase.toLowerCase().includes('rewire');
+  const isInsert = !!step.newNode && (isInsertPhase || (step.opKey === 'insertEnd' && isRewirePhase));
+
+  let nIdx = -1, nVal = 'NEW';
+  if (isInsert) {
+    nIdx = step.newNode.idx;
+    nVal = step.newNode.val !== undefined ? step.newNode.val : 'NEW';
+    
+    // If the algorithm already updated the array early, remove the duplicate temporarily 
+    // to stop the red arrows from knotting into themselves and disappearing!
+    if (items.length > nIdx && String(items[nIdx]) === String(nVal)) {
+      items.splice(nIdx, 1);
+    }
+  }
+
+  // --- Maintain Delete State during the "Rewire" phase ---
+  const isDeletePhase = animPhase.toLowerCase().includes('delete');
+  const dIdx = step.deleteIdx !== undefined && step.deleteIdx !== null && step.deleteIdx >= 0 ? step.deleteIdx : -1;
+  const isDelete = dIdx >= 0 && (isDeletePhase || isRewirePhase);
+
+  // --- OVERRIDE POINTERS DURING ACTION PHASES ---
+  let renderHighlight = step.highlight;
+  let renderPrev = step.prevIdx;
+
+  if (isInsert) {
+    // Lock pointers around the insertion gap
+    renderHighlight = nIdx;
+    renderPrev = nIdx - 1;
+  } else if (isDelete) {
+    // Lock 'prev' on the node being deleted, and 'curr' on the node after it
+    renderHighlight = dIdx + 1;
+    renderPrev = dIdx;
+  }
+
+  // If 'prev' and 'current' are on the exact same node, hide 'prev' to prevent stacking
+  if (renderHighlight !== undefined && renderHighlight !== null && renderPrev === renderHighlight) { 
+    renderPrev = null; 
+  }
+
+  const panel = document.getElementById('viz-panel');
+  const panelW = panel.clientWidth || 600;
+  const panelH = panel.clientHeight || 300;
+  const dataW = 46, ptrW = 20, nodeW = dataW + ptrW, nodeH = 42;
+  const arrowGap = 40;
+  const stride = nodeW + arrowGap;
+
+  const isDoubly = type.includes('doubly');
+  const isCircular = type.includes('circular');
+  const yOffset = isDoubly ? 6 : 0;
+
+  let totalWidth = items.length * stride - arrowGap + (isInsert ? stride : 0);
+  if (isCircular) totalWidth += 80;
+  totalWidth += 40;
+
+  const W = Math.max(panelW, totalWidth);
+  const H = Math.max(panelH, 360);
+  canvas.width = W;
   canvas.height = H;
-  setDsScroll(items.length > 0 && totalContentW > panelW);
+  if (typeof setDsScroll === 'function') setDsScroll(items.length > 0 && totalWidth > panelW);
 
   ctx.clearRect(0, 0, W, H);
   const isLight = document.body.classList.contains('light');
   ctx.fillStyle = isLight ? '#f0f0f8' : '#0a0a14';
   ctx.fillRect(0, 0, W, H);
 
-  // Title
   const titleMap = {
-    'singly-ll':'SINGLY LINKED LIST', 'doubly-ll':'DOUBLY LINKED LIST',
-    'circular-ll':'CIRCULAR LINKED LIST', 'ordered-ll':'ORDERED LINKED LIST',
+    'singly-ll': 'SINGLY LINKED LIST', 'doubly-ll': 'DOUBLY LINKED LIST',
+    'circular-ll': 'CIRCULAR LINKED LIST', 'ordered-ll': 'ORDERED LINKED LIST',
   };
   ctx.fillStyle = '#8888aa'; ctx.font = 'bold 12px JetBrains Mono'; ctx.textAlign = 'center';
-  ctx.fillText(titleMap[type] || 'LINKED LIST', Math.min(W/2, panelW/2), 20);
+  ctx.fillText(titleMap[type] || 'LINKED LIST', Math.min(W / 2, panelW / 2), 20);
 
-  // Phase badge (same as before)
-  const phaseColors = {
-    traverse: ['#1a2a3a','#43d9ad'], found:  ['#2a2a00','#ffd166'],
-    insert:   ['#1a3a1a','#22c55e'], delete: ['#3a1a1a','#ff6584'],
-    rewire:   ['#2a1a3a','#a78bfa'], done:   ['#0a2a1a','#43d9ad'],
-  };
-  const [pbg, pfg] = phaseColors[animPhase] || phaseColors.traverse;
-  const phaseLabel = {
-    traverse:'● TRAVERSING', found:'◎ POSITION FOUND', insert:'↓ INSERTING',
-    delete:'✕ DELETING', rewire:'⟳ REWIRING POINTER', done:'✓ DONE',
-  }[animPhase] || animPhase.toUpperCase();
-  const badgeX = Math.min(W, panelW);
-  ctx.font = 'bold 10px JetBrains Mono';
-  const pw = ctx.measureText(phaseLabel).width + 20;
-  ctx.fillStyle = pbg;
-  ctx.beginPath(); ctx.roundRect(badgeX - pw - 8, 5, pw, 20, 4); ctx.fill();
-  ctx.strokeStyle = pfg; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.roundRect(badgeX - pw - 8, 5, pw, 20, 4); ctx.stroke();
-  ctx.fillStyle = pfg; ctx.textAlign = 'right';
-  ctx.fillText(phaseLabel, badgeX - 14, 19);
-
-  // Operation header (left side)
-  const opNames = {
-    insertBegin:'INSERT AT HEAD', insertEnd:'INSERT AT TAIL',
-    insertPos:'INSERT AT POSITION', deleteBegin:'DELETE HEAD',
-    deleteEnd:'DELETE TAIL', deleteByVal:'DELETE BY VALUE',
-    orderedInsert:'SORTED INSERT', orderedDelete:'SORTED DELETE',
-    orderedSearch:'SEARCH',
-  };
-  const opName = opNames[step.opKey] || 'LINKED LIST';
-  const opColors = {
-    insertBegin:'#22c55e', insertEnd:'#22c55e', insertPos:'#22c55e',
-    deleteBegin:'#ff6584', deleteEnd:'#ff6584', deleteByVal:'#ff6584',
-    orderedInsert:'#22c55e', orderedDelete:'#ff6584', orderedSearch:'#43d9ad',
-  };
-  const opColor = opColors[step.opKey] || '#6c63ff';
+  ctx.fillStyle = '#1a2a3a';
+  ctx.beginPath(); ctx.roundRect(Math.min(W, panelW) - 80, 5, 70, 20, 4); ctx.fill();
   ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'left';
-  ctx.fillStyle = opColor;
-  ctx.fillText(opName, 14, 19);
+  ctx.fillStyle = '#6c63ff';
+  ctx.fillText(step.opKey ? step.opKey.toUpperCase() : 'OPERATION', 14, 19);
 
-  // Pointer variable legend (bottom of canvas)
-  const legendItems = [];
-  if (step.highlight !== null && step.highlight !== undefined && step.highlight >= 0)
-    legendItems.push(['#43d9ad', step.opKey?.includes('delete') ? 'target' : step.opKey?.includes('search') ? 'curr' : 'curr']);
-  if (step.prevIdx !== null && step.prevIdx !== undefined && step.prevIdx >= 0)
-    legendItems.push(['#a78bfa', 'prev']);
-  if (step.nextIdx !== null && step.nextIdx !== undefined && step.nextIdx >= 0)
-    legendItems.push(['#f97316', 'next']);
-  if (step.newNode)
-    legendItems.push(['#22c55e', 'newNode']);
-  if (step.deleteIdx !== null && step.deleteIdx !== undefined && step.deleteIdx >= 0)
-    legendItems.push(['#ff6584', 'delete']);
-  if (legendItems.length > 0) {
-    ctx.font = '600 10px Inter';
-    let lx = 14; const ly = H - 10;
-    legendItems.forEach(([col, lbl]) => {
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.roundRect(lx, ly-9, 9, 9, 2); ctx.fill();
-      ctx.fillStyle = isLight ? '#333366' : '#aaaacc';
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillText(lbl, lx+12, ly-4);
-      lx += 12 + ctx.measureText(lbl).width + 14;
-    });
-    ctx.textBaseline = 'alphabetic';
-  }
-
-  if (items.length === 0) {
+  if (items.length === 0 && !isInsert) {
     ctx.fillStyle = '#555'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
-    ctx.fillText('List is empty.', Math.min(W/2, panelW/2), H/2);
+    ctx.fillText('List is empty.', Math.min(W / 2, panelW / 2), H / 2);
     return;
   }
 
-  // Fixed Y position (same as static)
-  // For normal view (non‑fullscreen) use fixed Y = 58
-// For fullscreen, center the list vertically
-const y = Math.max(20, (H - nodeH) / 2-45);
-  function nx(i) { return sidePad + i * (nodeW + arrowGap); }
-  const midY = y + nodeH / 2;
+  const startX = Math.max(isCircular ? 40 : 20, (W - totalWidth) / 2);
+  const titleSpace = 24, legendSpace = 32;
+  const available = H - titleSpace - legendSpace;
+  const y = titleSpace + (available - nodeH) / 2 + 15;
 
-  // Easing helpers
-  const easeOut  = t => 1 - Math.pow(1-t, 3);
-  const easeInOut= t => t < 0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
-  const bounce   = t => {
-    if (t < 1/2.75) return 7.5625*t*t;
-    if (t < 2/2.75) return 7.5625*(t-1.5/2.75)*(t-1.5/2.75)+0.75;
-    if (t < 2.5/2.75) return 7.5625*(t-2.25/2.75)*(t-2.25/2.75)+0.9375;
-    return 7.5625*(t-2.625/2.75)*(t-2.625/2.75)+0.984375;
-  };
+  const easeInOut = val => val < 0.5 ? 4 * val * val * val : 1 - Math.pow(-2 * val + 2, 3) / 2;
+  const easeOutBack = val => { const c1 = 1.70158; const c3 = c1 + 1; return 1 + c3 * Math.pow(val - 1, 3) + c1 * Math.pow(val - 1, 2); };
 
-  // Enhanced node animation (same as before, but we'll add extra floating text later)
-  function getNodeAnim(i) {
-    const def = { dx:0, dy:0, scaleX:1, scaleY:1, alpha:1, glowColor:null, glowR:0 };
-    if (!animating) return def;
-    if (animPhase === 'traverse' && step.highlight === i) {
-      const pulse = Math.sin(t * Math.PI);
-      return { ...def, dy: -8*pulse, scaleX: 1+0.10*pulse, scaleY: 1+0.10*pulse,
-               glowColor: '#43d9ad', glowR: 20*pulse };
+  // --- Deletion Sequences ---
+  let dropProgress = 0, arrowProgress = 0, shiftProgress = 0;
+  if (isDelete) {
+    if (isDeletePhase) {
+      if (t < 0.35) dropProgress = easeInOut(t / 0.35); else dropProgress = 1;
+      if (t >= 0.35 && t < 0.70) arrowProgress = easeInOut((t - 0.35) / 0.35); else if (t >= 0.70) arrowProgress = 1;
+      if (t >= 0.70) shiftProgress = easeInOut((t - 0.70) / 0.30);
+    } else {
+      dropProgress = 1;
+      arrowProgress = 1;
+      shiftProgress = 1;
     }
-    if (animPhase === 'traverse' && step.prevIdx === i) {
-      const fade = 0.3 + 0.3*Math.sin(t*Math.PI);
-      return { ...def, glowColor: '#a78bfa', glowR: 10*fade };
+  }
+
+  function getVisualX(i) {
+    let base = startX + i * stride;
+    if (isInsert && i >= nIdx) {
+      let insShift = 0;
+      if (t >= 0.80) insShift = easeInOut((t - 0.80) / 0.20);
+      return startX + (i + insShift) * stride;
     }
-    if (animPhase === 'found' && step.highlight === i) {
-      const b = Math.sin(t * Math.PI);
-      return { ...def, dy: -12*b, scaleX: 1+0.15*b, scaleY: 1+0.15*b,
-               glowColor: '#ffd166', glowR: 24*b };
+    if (isDelete && i > dIdx) {
+      return startX + (i - shiftProgress) * stride;
     }
-    if (animPhase === 'insert' && step.newNode && step.newNode.idx === i) {
-      const e = easeOut(t);
-      return { ...def, dy: -(nodeH + 40)*(1-e), alpha: Math.min(1, t*2),
-               scaleX: 0.7+0.3*e, scaleY: 0.7+0.3*e,
-               glowColor: '#22c55e', glowR: 18*(1-t) };
+    return base;
+  }
+  
+  function getVisualY(i) {
+    if (isDelete && i === dIdx) {
+      return y + dropProgress * 80;
     }
-    if (animPhase === 'insert' && step.newNode && i >= step.newNode.idx && (!step.newNode || step.newNode.idx !== i)) {
-      const push = easeOut(t) * 6;
-      return { ...def, dx: push * (1 - easeOut(t)) };
-    }
-    if (animPhase === 'delete' && step.deleteIdx === i) {
-      const e = easeInOut(t);
-      const glowPulse = t < 0.3 ? t/0.3 : (1-t)/0.7;
-      return { ...def, scaleX: 1-0.9*e, scaleY: 1-0.9*e, alpha: Math.max(0, 1-e*1.2),
-               glowColor: '#ff6584', glowR: 28*glowPulse };
-    }
-    if (animPhase === 'rewire') {
-      if (step.prevIdx === i) {
-        const pulse = 0.5 + 0.5*Math.abs(Math.sin(t*Math.PI*2));
-        return { ...def, glowColor: '#a78bfa', glowR: 22*pulse,
-                 scaleX: 1+0.05*pulse, scaleY: 1+0.05*pulse };
-      }
-      if (step.nextIdx === i) {
-        const pulse = 0.5 + 0.5*Math.abs(Math.sin(t*Math.PI*2 + 0.8));
-        return { ...def, glowColor: '#f97316', glowR: 16*pulse };
-      }
-      return { ...def, alpha: 0.55 };
-    }
-    if (animPhase === 'done') {
-      const delay = i / Math.max(1, items.length - 1);
-      const localT = Math.max(0, Math.min(1, (t - delay*0.4) / 0.6));
-      const flash = Math.sin(localT * Math.PI);
-      return { ...def, glowColor: '#43d9ad', glowR: 16*flash,
-               scaleX: 1+0.06*flash, scaleY: 1+0.06*flash, dy: -4*flash };
-    }
-    return def;
+    return y; 
   }
 
   function nodeColor(i) {
-    if (step.deleteIdx === i) return { data:'#3a1a1a', border:'#ff6584', text:'#ff6584', label:'DEL' };
-    if (step.highlight === i) return { data:'#1a2a3a', border:'#43d9ad', text:'#43d9ad', label:'CURR' };
-    if (step.prevIdx === i) return { data:'#2a1a3a', border:'#a78bfa', text:'#a78bfa', label:'PREV' };
-    if (step.nextIdx === i) return { data:'#2a1a20', border:'#f97316', text:'#f97316', label:'NEXT' };
-    if (i === 0) return { data:'#2a2a5a', border:'#6c63ff', text:'#ffffff', label:null };
-    return { data:'#22223a', border:'#4444aa', text:'#ffffff', label:null };
+    if (isDelete && dIdx === i) return { data: '#3a1a1a', border: '#ff6584', text: '#ff6584' };
+    if (renderHighlight === i) return { data: '#1a2a3a', border: '#43d9ad', text: '#43d9ad' };
+    if (renderPrev === i) return { data: '#2a1a3a', border: '#a78bfa', text: '#a78bfa' };
+    if (i === 0) return { data: '#2a2a5a', border: '#6c63ff', text: '#ffffff' };
+    return { data: '#22223a', border: '#4444aa', text: '#ffffff' };
   }
 
-  // --- Ghost new node (unchanged) ---
-  const hasGhost = step.newNode && animPhase !== 'insert' && animPhase !== 'done';
-  if (hasGhost) {
-    const ni = step.newNode.idx, nv = step.newNode.val;
-    const gx = ni >= items.length ? nx(items.length - 1) + nodeW + arrowGap/2 : nx(ni);
-    const ghostT = animPhase === 'rewire' ? easeOut(t) : 1;
-    const gy  = y - nodeH - 26 - (animPhase === 'found' ? 8*Math.sin(t*Math.PI) : 0);
-    ctx.save();
-    ctx.globalAlpha = ghostT;
-    ctx.fillStyle = '#2a2800'; ctx.fillRect(gx, gy, dataW, nodeH);
-    ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2.5;
-    ctx.strokeRect(gx, gy, dataW, nodeH);
-    ctx.fillStyle = '#ffd166'; ctx.font = 'bold 13px JetBrains Mono'; ctx.textAlign = 'center';
-    ctx.fillText(String(nv), gx + dataW/2, gy + nodeH/2 + 5);
-    ctx.fillStyle = '#ffd16699'; ctx.font = 'bold 8px Inter'; ctx.textAlign = 'center';
-    ctx.fillText('NEW', gx + dataW/2, gy - 5);
-    ctx.restore();
-    if (ni < items.length) {
-      const tx = nx(ni) + dataW/2, ty2 = y - 4;
-      ctx.save();
-      ctx.globalAlpha = 0.6 * ghostT;
-      ctx.strokeStyle = '#ffd16688'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
-      ctx.beginPath(); ctx.moveTo(gx + dataW/2, gy + nodeH); ctx.lineTo(tx, ty2); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#ffd16688';
-      ctx.beginPath(); ctx.moveTo(tx, ty2); ctx.lineTo(tx-5, ty2+8); ctx.lineTo(tx+5, ty2+8);
-      ctx.closePath(); ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  // --- Draw nodes (same as before, with animation) ---
+  // --- Draw Existing Nodes ---
   items.forEach((val, i) => {
-    const ao2 = getNodeAnim(i);
-    const c   = nodeColor(i);
-    const isHead = i === 0, isTail = i === items.length - 1;
-    const baseX = nx(i);
-    const cx = baseX + ao2.dx + nodeW/2;
-    const cy = y + ao2.dy + nodeH/2;
+    const bx = getVisualX(i); const by = getVisualY(i);
+    let scale = 1, alpha = 1, glowColor = null, glowR = 0;
 
-    ctx.save();
-    ctx.globalAlpha = ao2.alpha;
-    ctx.translate(cx, cy);
-    ctx.scale(ao2.scaleX, ao2.scaleY);
-    ctx.translate(-nodeW/2, -nodeH/2);
-
-    if (ao2.glowR > 0 && ao2.glowColor) {
-      ctx.shadowColor = ao2.glowColor;
-      ctx.shadowBlur  = ao2.glowR;
+    if (animating && animPhase.includes('traverse') && renderHighlight === i) { 
+      glowColor = '#43d9ad'; glowR = 20 * Math.sin(t * Math.PI); 
+    }
+    
+    if (isDelete && dIdx === i) {
+      scale = 1 - 0.4 * dropProgress; 
+      alpha = Math.max(0, 1 - dropProgress); 
+      if (animating && isDeletePhase) {
+        glowColor = '#ff6584'; 
+        glowR = 28 * (1 - dropProgress);
+      }
     }
 
-    // Data compartment
+    if (alpha <= 0.01) return; 
+
+    const cx = bx + nodeW / 2; const cy = by + nodeH / 2; const c = nodeColor(i);
+
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(cx, cy); ctx.scale(scale, scale); ctx.translate(-nodeW / 2, -nodeH / 2);
+    if (glowR > 0) { ctx.shadowColor = glowColor; ctx.shadowBlur = glowR; }
+
     ctx.fillStyle = c.data; ctx.fillRect(0, 0, dataW, nodeH);
-    ctx.strokeStyle = c.border; ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, dataW, nodeH);
-
-    // Pointer compartment
+    ctx.strokeStyle = c.border; ctx.lineWidth = 2; ctx.strokeRect(0, 0, dataW, nodeH);
     ctx.fillStyle = '#1a1a30'; ctx.fillRect(dataW, 0, ptrW, nodeH);
-    ctx.strokeStyle = c.border + '88'; ctx.lineWidth = 1;
-    ctx.strokeRect(dataW, 0, ptrW, nodeH);
-
+    ctx.strokeStyle = c.border + '88'; ctx.lineWidth = 1; ctx.strokeRect(dataW, 0, ptrW, nodeH);
+    
     ctx.shadowBlur = 0;
-
     ctx.fillStyle = c.text; ctx.font = 'bold 14px JetBrains Mono'; ctx.textAlign = 'center';
-    ctx.fillText(String(val), dataW/2, nodeH/2 + 5);
-    ctx.fillStyle = '#43d9ad'; ctx.font = '11px JetBrains Mono';
-    ctx.fillText('→', dataW + ptrW/2, nodeH/2 + 4);
-
+    ctx.fillText(String(val), dataW / 2, nodeH / 2 + 5);
+    
+    ctx.fillStyle = '#43d9ad'; ctx.font = isDoubly ? '10px JetBrains Mono' : '11px JetBrains Mono';
+    ctx.fillText(isDoubly ? '⇌' : '→', dataW + ptrW / 2, nodeH / 2 + 4);
     ctx.restore();
 
-    // HEAD / TAIL labels
-    if (isHead) {
-      ctx.fillStyle='#ffd166'; ctx.font='bold 9px Inter'; ctx.textAlign='center';
-      ctx.fillText('HEAD', baseX + dataW/2, y - 12);
+    if (alpha > 0.1) {
+      if (i === 0 && !(isDelete && dIdx === 0 && t > 0.4)) { ctx.fillStyle = '#ffd166'; ctx.font = 'bold 9px Inter'; ctx.fillText('HEAD', bx + dataW / 2, by - 12); }
+      if (i === items.length - 1 && !(isInsert && nIdx === items.length) && !(isDelete && dIdx === items.length - 1 && t > 0.4)) { ctx.fillStyle = '#ff6584'; ctx.font = 'bold 9px Inter'; ctx.fillText('TAIL', bx + dataW / 2, by - 12); }
+      ctx.fillStyle = '#555'; ctx.font = '8px JetBrains Mono'; ctx.fillText(`[${i}]`, bx + dataW / 2, by + nodeH + 24);
     }
-    if (isTail) {
-      ctx.fillStyle='#ff6584'; ctx.font='bold 9px Inter'; ctx.textAlign='center';
-      ctx.fillText('TAIL', baseX + dataW/2, y - 12);
-    }
-
-    // Index
-    ctx.fillStyle='#555'; ctx.font='8px JetBrains Mono'; ctx.textAlign='center';
-    ctx.fillText(`[${i}]`, baseX + dataW/2, y + nodeH + 24);
   });
 
-  // --- ENHANCED POINTER FLAGS with background boxes ---
-  const pointerFlags = [];
-  const _currLabel = step.opKey?.includes('delete') ? 'target'
-                   : step.opKey?.includes('search') ? 'curr'
-                   : step.opKey?.includes('insert') ? 'curr' : 'p';
-  if (step.highlight !== null && step.highlight !== undefined && step.highlight >= 0 && step.highlight < items.length)
-    pointerFlags.push({ idx: step.highlight, label: _currLabel, color: '#43d9ad', offset: 0 });
-  if (step.prevIdx !== null && step.prevIdx !== undefined && step.prevIdx >= 0 && step.prevIdx < items.length && step.prevIdx !== step.highlight)
-    pointerFlags.push({ idx: step.prevIdx, label: 'prev', color: '#a78bfa', offset: 0 });
-  if (step.nextIdx !== null && step.nextIdx !== undefined && step.nextIdx >= 0 && step.nextIdx < items.length && step.nextIdx !== step.highlight && step.nextIdx !== step.prevIdx)
-    pointerFlags.push({ idx: step.nextIdx, label: 'next', color: '#f97316', offset: 0 });
+  // --- Draw Floating "NEW" Node (Insertion) ---
+  let newX = 0, newY = 0;
+  if (isInsert) {
+    newX = startX + nIdx * stride; 
+    let insDrop = 0;
+    if (t >= 0.80) insDrop = easeInOut((t - 0.80) / 0.20);
+    newY = y - 95 * (1 - insDrop);
 
-  // Avoid overlapping flags
-  for (let a2 = 0; a2 < pointerFlags.length; a2++) {
-    for (let b2 = a2+1; b2 < pointerFlags.length; b2++) {
-      if (pointerFlags[a2].idx === pointerFlags[b2].idx) pointerFlags[b2].offset = 22;
-    }
-  }
+    let scale = 1, alpha = 1;
+    const nodeT = Math.max(0, Math.min(1, t / 0.20));
+    scale = Math.max(0, easeOutBack(nodeT)); alpha = nodeT;
 
-  pointerFlags.forEach(({ idx, label, color, offset }) => {
-    const px = nx(idx) + dataW/2;
-    const stemTop = y + nodeH + 4;
-    const stemBot = stemTop + 28 + offset;
-    // Draw stem line
-    ctx.beginPath(); ctx.moveTo(px, stemTop); ctx.lineTo(px, stemBot); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
-    // Arrowhead
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.moveTo(px, stemTop); ctx.lineTo(px-5, stemTop+8); ctx.lineTo(px+5, stemTop+8); ctx.closePath(); ctx.fill();
-    // Background box with larger font
-    const lblW = Math.max(48, ctx.measureText(label).width + 24);
-    const lblH = 22;
-    ctx.fillStyle = color + '22';
-    ctx.beginPath(); ctx.roundRect(px-lblW/2, stemBot, lblW, lblH, 6); ctx.fill();
-    ctx.strokeStyle = color; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(px-lblW/2, stemBot, lblW, lblH, 6); ctx.stroke();
-    ctx.fillStyle = color; ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(label, px, stemBot + lblH/2);
-    ctx.textBaseline = 'alphabetic';
-  });
-
-  // --- Helper: draw arrow with optional label and glow ---
-  function drawArrow(x1, y1, x2, y2, color, label, dashed, alpha, glow) {
-    ctx.save();
-    ctx.globalAlpha = alpha ?? 1;
-    if (dashed) ctx.setLineDash([5,4]);
-    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
-    if (glow) { ctx.shadowColor = color; ctx.shadowBlur = 8; }
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    ctx.shadowBlur = 0; ctx.setLineDash([]);
-    const ang = Math.atan2(y2-y1, x2-x1);
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x2, y2);
-    ctx.lineTo(x2 - 9*Math.cos(ang-0.4), y2 - 9*Math.sin(ang-0.4));
-    ctx.lineTo(x2 - 9*Math.cos(ang+0.4), y2 - 9*Math.sin(ang+0.4));
-    ctx.closePath(); ctx.fill();
-    if (label) {
-      const mx=(x1+x2)/2, my=(y1+y2)/2;
-      ctx.fillStyle = color; ctx.font='bold 9px JetBrains Mono';
-      ctx.textAlign='center'; ctx.textBaseline='bottom';
-      ctx.fillText(label, mx, my - 4);
-      ctx.textBaseline='alphabetic';
-    }
-    ctx.restore();
-  }
-
-  function drawNull(x, y2, label, color) {
-    const col = color || '#ff658488';
-    const capW = 30, capH = 18;
-    ctx.strokeStyle = col; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x, y2); ctx.lineTo(x+10, y2); ctx.stroke();
-    ctx.fillStyle = '#1a0a0a'; ctx.strokeStyle = col; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(x+10, y2-capH/2, capW, capH, 3); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = col; ctx.font='bold 8px JetBrains Mono';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(label || 'null', x+10+capW/2, y2);
-    ctx.textBaseline='alphabetic';
-  }
-
-  // --- Draw standard .next arrows (with labels) ---
-  for (let i = 0; i < items.length - 1; i++) {
-    const x1 = nx(i) + nodeW;
-    const x2 = nx(i+1);
-    const isDeletedSrc  = step.deleteIdx === i;
-    const isRewireSrc   = (animPhase === 'rewire' || animPhase === 'insert') && step.prevIdx === i;
-    const isRewireDest  = (animPhase === 'rewire' || animPhase === 'insert') && step.nextIdx === i+1;
-
-    let col   = '#43d9adcc';
-    let lbl   = '.next';
-    let dash  = false;
-    let alpha = 1;
-    if (isDeletedSrc) { col='#ff658444'; dash=true; alpha=0.5; lbl=''; }
-    else if (isRewireSrc) { col='#a78bfacc'; lbl='.next (old)'; }
-    else if (isRewireDest){ col='#f97316cc'; lbl=''; }
-    drawArrow(x1, midY, x2, midY, col, lbl, dash, alpha, false);
-  }
-
-  // --- Enhanced CUT ANIMATION (phase between 0.25 and 0.5 of rewire) ---
-  if ((animPhase === 'rewire' || animPhase === 'insert') &&
-      step.prevIdx !== null && step.prevIdx >= 0 && step.prevIdx < items.length) {
-    const pi  = step.prevIdx;
-    const ni2 = step.nextIdx !== null && step.nextIdx >= 0 && step.nextIdx < items.length ? step.nextIdx : -1;
-    const sx = nx(pi) + nodeW;
-    const sy = y + nodeH / 2;
-    const oldTargetX = (pi + 1 < items.length) ? nx(pi + 1) + dataW/2 : sx + arrowGap;
-    const newTargetX = ni2 >= 0 ? nx(ni2) + dataW/2 : sx + arrowGap + 30;
-    const newTargetY = sy;
-
-    // Draw the old pointer (dashed) with a scissors icon if in cut phase
-    if (t < 0.5) {
-      const cutProgress = Math.min(1, t / 0.25); // 0->1 during first 0.25 of rewire
-      const cutAlpha = 1 - cutProgress;
-      if (cutAlpha > 0) {
-        ctx.save();
-        ctx.globalAlpha = cutAlpha;
-        ctx.strokeStyle = '#ff6584'; ctx.lineWidth = 2.5; ctx.setLineDash([5,4]);
-        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(oldTargetX, sy); ctx.stroke();
-        ctx.setLineDash([]);
-        // Scissors icon
-        const scissorX = (sx + oldTargetX) / 2;
-        ctx.fillStyle = '#ff6584';
-        ctx.font = 'bold 16px "Segoe UI", "JetBrains Mono"';
-        ctx.fillText('✂', scissorX - 8, sy - 8);
-        ctx.font = 'bold 9px JetBrains Mono';
-        ctx.fillStyle = '#ff6584';
-        ctx.fillText('cut .next', scissorX, sy - 20);
-        ctx.restore();
-      }
+    if (t < 0.85) {
+      ctx.save(); ctx.beginPath(); ctx.setLineDash([4, 4]);
+      ctx.moveTo(newX + dataW / 2, newY + nodeH + 4); ctx.lineTo(newX + dataW / 2, y - 4);
+      ctx.strokeStyle = '#8888aa'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
     }
 
-    // --- Enhanced ATTACH ANIMATION (phase after 0.5) ---
-    if (t > 0.5) {
-      const attachProgress = (t - 0.5) / 0.5; // 0->1 during second half
-      const curX = sx + (newTargetX - sx) * attachProgress;
-      const arcH = 42 + 8 * Math.sin(attachProgress * Math.PI);
-      const midC = (sx + curX) / 2;
-      const ctrlY = sy - arcH;
+    ctx.fillStyle = '#ffd166'; ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'center';
+    let newLabel = 'NEW';
+    if (nIdx === 0) newLabel = 'HEAD';
+    if (nIdx === items.length) newLabel = 'TAIL';
+    ctx.fillText(newLabel, newX + dataW / 2, newY - 12);
 
-      ctx.save();
-      ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 3;
-      ctx.shadowColor = '#a78bfa'; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.moveTo(sx, sy);
-      ctx.quadraticCurveTo(midC, ctrlY, curX, newTargetY);
-      ctx.stroke();
-      // Arrowhead at growing end
-      const ang = Math.atan2(newTargetY - ctrlY, curX - midC);
-      ctx.fillStyle = '#a78bfa';
-      ctx.beginPath();
-      ctx.moveTo(curX, newTargetY);
-      ctx.lineTo(curX - 11*Math.cos(ang-0.4), newTargetY - 11*Math.sin(ang-0.4));
-      ctx.lineTo(curX - 11*Math.cos(ang+0.4), newTargetY - 11*Math.sin(ang+0.4));
-      ctx.closePath(); ctx.fill();
-      // Label
-      ctx.fillStyle = '#a78bfa'; ctx.font = 'bold 10px JetBrains Mono'; ctx.shadowBlur = 0;
-      ctx.fillText('new .next', midC, ctrlY - 10);
-      if (ni2 >= 0) {
-        ctx.fillStyle = '#f97316'; ctx.font = 'bold 9px JetBrains Mono';
-        ctx.fillText(`node[${ni2}]`, newTargetX, newTargetY - 18);
-      } else {
-        ctx.fillStyle = '#ff6584'; ctx.font = 'bold 9px JetBrains Mono';
-        ctx.fillText('null', curX + 4, newTargetY - 14);
-      }
-      ctx.restore();
-    }
-
-    // Also highlight the prev node's .next box during rewire
-    const ptrBoxX = nx(pi) + dataW;
-    ctx.save();
-    ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 2; ctx.shadowColor = '#a78bfa'; ctx.shadowBlur = 8;
-    ctx.strokeRect(ptrBoxX+1, y+1, ptrW-2, nodeH-2);
+    ctx.save(); ctx.globalAlpha = alpha; 
+    ctx.translate(newX + nodeW / 2, newY + nodeH / 2); ctx.scale(scale, scale); ctx.translate(-nodeW / 2, -nodeH / 2);
+    ctx.shadowColor = '#ff8c00'; ctx.shadowBlur = 15;
+    
+    ctx.fillStyle = '#3a2008'; ctx.fillRect(0, 0, dataW, nodeH);
+    ctx.strokeStyle = '#ff8c00'; ctx.lineWidth = 2; ctx.strokeRect(0, 0, dataW, nodeH);
+    ctx.fillStyle = '#1a1a30'; ctx.fillRect(dataW, 0, ptrW, nodeH);
+    ctx.strokeStyle = '#ff8c0088'; ctx.lineWidth = 1; ctx.strokeRect(dataW, 0, ptrW, nodeH);
+    
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#a78bfacc'; ctx.font='bold 10px JetBrains Mono'; ctx.textAlign='center';
-    ctx.fillText('.next', ptrBoxX + ptrW/2, y - 8);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 14px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText(String(nVal), dataW / 2, nodeH / 2 + 5);
+    ctx.fillStyle = '#43d9ad'; ctx.font = isDoubly ? '10px JetBrains Mono' : '11px JetBrains Mono';
+    ctx.fillText(isDoubly ? '⇌' : '→', dataW + ptrW / 2, nodeH / 2 + 4);
     ctx.restore();
   }
 
-  // --- HEAD.prev and TAIL.next (unchanged) ---
-  if (items.length > 0 && type === 'doubly-ll') {
-    const hx = nx(0);
-    drawNull(hx - 44, midY - 14, 'null', '#ef444488');
-    drawArrow(hx - 44 + 30, midY - 14, hx, midY - 14, '#ef444466', '.prev', false, 0.8, false);
-    ctx.fillStyle='#ef444466'; ctx.font='bold 7px JetBrains Mono';
-    ctx.textAlign='center'; ctx.fillText('HEAD.prev', hx - 18, midY - 26);
+  // --- Arrow Functions ---
+  function drawArrowHead(ctx, x, y, angle, color) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-8, -4); ctx.lineTo(-8, 4);
+    ctx.closePath(); ctx.fill(); ctx.restore();
   }
-  const lastI2 = items.length - 1;
-  if (lastI2 >= 0 && type !== 'circular-ll' && step.deleteIdx !== lastI2) {
-    const tx = nx(lastI2) + nodeW;
-    const col2 = (animPhase==='rewire' && step.prevIdx===lastI2) ? '#a78bfacc' : '#ff658488';
-    const lbl2 = (animPhase==='rewire' && step.prevIdx===lastI2) ? '.next→?' : '.next';
-    drawNull(tx, midY, 'null', col2);
-    ctx.fillStyle='#ff658466'; ctx.font='bold 7px JetBrains Mono';
-    ctx.textAlign='left'; ctx.fillText(lbl2, tx+2, midY-10);
+  
+  function drawConnection(startX, startY, endX, endY, color, alpha = 1, isBackward = false) {
+    if (alpha <= 0.01) return;
+    ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, alpha)); ctx.beginPath(); ctx.moveTo(startX, startY);
+    const dist = Math.max(20, Math.abs(endX - startX) / 2);
+    const cp1X = isBackward ? startX - dist : startX + dist;
+    const cp2X = isBackward ? endX + dist : endX - dist;
+    ctx.bezierCurveTo(cp1X, startY, cp2X, endY, endX, endY);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+    drawArrowHead(ctx, endX, endY, isBackward ? Math.PI : 0, color);
+    ctx.restore();
+  }
+  
+  function drawCircularConnection(startX, startY, endX, endY, color, isUnder = false, alpha = 1) {
+    if (alpha <= 0.01) return;
+    ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, alpha)); ctx.beginPath(); ctx.moveTo(startX, startY);
+    const xGap = 25; 
+    const yGap = isUnder ? 55 : -140; 
+    ctx.lineTo(startX + xGap, startY); ctx.lineTo(startX + xGap, startY + yGap); 
+    ctx.lineTo(endX - xGap, startY + yGap); ctx.lineTo(endX - xGap, endY); ctx.lineTo(endX, endY); 
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+    drawArrowHead(ctx, endX, endY, 0, color);
+    ctx.restore();
   }
 
-  // --- Doubly .prev arrows (unchanged) ---
-  if (type === 'doubly-ll') {
-    const prevY = y + nodeH + 22;
-    for (let i = 1; i < items.length; i++) {
-      const x1 = nx(i);
-      const x2 = nx(i-1) + nodeW;
-      const isActivePrev = (animPhase==='rewire'||animPhase==='insert') && step.nextIdx===i;
-      const col3 = isActivePrev ? '#ef4444ee' : '#ef444488';
-      const alpha3 = 1;
-      const cx2 = (x1 + x2) / 2;
-      const cy2 = prevY + 10;
-      ctx.save();
-      ctx.globalAlpha = alpha3;
-      ctx.strokeStyle = col3; ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(x1, prevY);
-      ctx.quadraticCurveTo(cx2, cy2, x2, prevY);
-      ctx.stroke();
-      ctx.fillStyle = col3;
-      ctx.beginPath();
-      ctx.moveTo(x2, prevY);
-      ctx.lineTo(x2+9, prevY-4); ctx.lineTo(x2+9, prevY+4);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = col3; ctx.font='bold 7px JetBrains Mono';
-      ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.fillText('.prev', cx2, cy2 + 2);
-      ctx.textBaseline='alphabetic';
-      ctx.restore();
+  // --- Main Straight Arrows ---
+  for (let i = 0; i < items.length - 1; i++) {
+    const fStartX = getVisualX(i) + nodeW; const fStartY = getVisualY(i) + nodeH / 2 - yOffset;
+    const fEndX = getVisualX(i + 1); const fEndY = getVisualY(i + 1) + nodeH / 2 - yOffset;
+    let fColor = '#43d9adcc'; 
+
+    // Insertion Routing
+    if (isInsert && i === nIdx - 1) {
+      let bendProgress = 0;
+      if (t >= 0.40 && t < 0.60) bendProgress = easeInOut((t - 0.40) / 0.20);
+      else if (t >= 0.60) bendProgress = 1;
+      const targetX = fEndX + (newX - fEndX) * bendProgress;
+      const targetY = fEndY + ((newY + nodeH/2 - yOffset) - fEndY) * bendProgress;
+      drawConnection(fStartX, fStartY, targetX, targetY, fColor);
+      continue;
+    }
+
+    // Deletion Forward Routing
+    if (isDelete) {
+      if (i === dIdx - 1) {
+        if (dIdx < items.length - 1) {
+          const ghostX = startX + dIdx * stride; 
+          const ghostY = y + nodeH/2 - yOffset;
+          const targetX = getVisualX(dIdx + 1);
+          const targetY = getVisualY(dIdx + 1) + nodeH/2 - yOffset;
+          const currentX = ghostX + (targetX - ghostX) * arrowProgress;
+          const currentY = ghostY + (targetY - ghostY) * arrowProgress;
+          drawConnection(fStartX, fStartY, currentX, currentY, fColor);
+          continue;
+        } else {
+          const origEndX = startX + dIdx * stride; 
+          const origEndY = y + nodeH/2 - yOffset;
+          const currentX = fStartX + (origEndX - fStartX) * (1 - arrowProgress);
+          const currentY = fStartY + (origEndY - fStartY) * (1 - arrowProgress);
+          drawConnection(fStartX, fStartY, currentX, currentY, fColor, 1 - arrowProgress);
+          continue;
+        }
+      }
+      if (i === dIdx) {
+        drawConnection(fStartX, fStartY, fEndX, fEndY, fColor, 1 - arrowProgress);
+        continue;
+      }
+    }
+
+    drawConnection(fStartX, fStartY, fEndX, fEndY, fColor);
+
+    // Doubly Linked Back-Arrows
+    if (isDoubly) {
+      const bStartX = getVisualX(i + 1); const bStartY = getVisualY(i + 1) + nodeH / 2 + yOffset;
+      const bEndX = getVisualX(i) + nodeW; const bEndY = getVisualY(i) + nodeH / 2 + yOffset;
+      let bColor = '#ff6584cc'; 
+
+      // Insertion Backward Routing
+      if (isInsert) {
+        if (i === nIdx - 1) {
+          let backBendProgress = 0;
+          if (t >= 0.80) backBendProgress = easeInOut((t - 0.80) / 0.20);
+          
+          const targetX = bEndX + ((newX + nodeW) - bEndX) * backBendProgress;
+          const targetY = bEndY + ((newY + nodeH/2 + yOffset) - bEndY) * backBendProgress;
+          drawConnection(bStartX, bStartY, targetX, targetY, bColor, 1, true);
+          
+          // Maintain the original connection to the previous node while shifting!
+          if (backBendProgress < 1) {
+             drawConnection(bStartX, bStartY, bEndX, bEndY, bColor, 1 - backBendProgress, true);
+          }
+          continue;
+        }
+        
+        // Keep the arrow from the shifting node to the node before it visible!
+        if (i === nIdx) {
+            drawConnection(bStartX, bStartY, bEndX, bEndY, bColor, 1, true);
+            continue;
+        }
+      }
+
+      // Deletion Backward Routing
+      if (isDelete) {
+        if (i === dIdx) {
+          if (dIdx > 0) {
+            const targetX = getVisualX(dIdx - 1) + nodeW;
+            const targetY = getVisualY(dIdx - 1) + nodeH / 2 + yOffset;
+            const ghostX = startX + dIdx * stride + nodeW; 
+            const ghostY = y + nodeH / 2 + yOffset;
+            const currentX = ghostX + (targetX - ghostX) * arrowProgress;
+            const currentY = ghostY + (targetY - ghostY) * arrowProgress;
+            drawConnection(bStartX, bStartY, currentX, currentY, bColor, 1, true);
+            continue;
+          } else {
+            const origEndX = startX + dIdx * stride + nodeW;
+            const origEndY = y + nodeH / 2 + yOffset;
+            const currentX = bStartX + (origEndX - bStartX) * (1 - arrowProgress);
+            const currentY = bStartY + (origEndY - bStartY) * (1 - arrowProgress);
+            drawConnection(bStartX, bStartY, currentX, currentY, bColor, 1 - arrowProgress, true);
+            continue;
+          }
+        }
+        if (i === dIdx - 1) {
+          drawConnection(bStartX, bStartY, bEndX, bEndY, bColor, 1 - arrowProgress, true);
+          continue;
+        }
+      }
+
+      drawConnection(bStartX, bStartY, bEndX, bEndY, bColor, 1, true);
     }
   }
 
-  // --- Circular back-arrow (unchanged) ---
-  if (type === 'circular-ll' && items.length > 1) {
-    const tailX = nx(items.length-1) + nodeW;
-    const headX = nx(0);
-    const arcY  = y - 30;
-    ctx.strokeStyle='#ff6584cc'; ctx.lineWidth=2; ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(tailX, midY); ctx.lineTo(tailX+10, midY);
-    ctx.lineTo(tailX+10, arcY); ctx.lineTo(headX-10, arcY);
-    ctx.lineTo(headX-10, midY); ctx.lineTo(headX, midY);
-    ctx.stroke();
-    ctx.fillStyle='#ff6584cc';
-    ctx.beginPath();
-    ctx.moveTo(headX,midY); ctx.lineTo(headX-9,midY-5); ctx.lineTo(headX-9,midY+5);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#ff658499'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
-    ctx.fillText('↩ circular .next', (tailX+headX)/2, arcY-5);
+  // --- Insertion Growing Arrows ---
+  if (isInsert) {
+    let bendProgress = 0;
+    if (t >= 0.40 && t < 0.60) bendProgress = easeInOut((t - 0.40) / 0.20);
+    else if (t >= 0.60) bendProgress = 1;
+
+    let growProgress = 0;
+    if (t >= 0.60 && t < 0.80) growProgress = easeInOut((t - 0.60) / 0.20);
+    else if (t >= 0.80) growProgress = 1;
+
+    let backBendProgress = 0;
+    if (t >= 0.80) backBendProgress = easeInOut((t - 0.80) / 0.20);
+
+    if (nIdx === items.length && items.length > 0 && bendProgress > 0) {
+      const startX = getVisualX(items.length - 1) + nodeW; 
+      const startY = getVisualY(items.length - 1) + nodeH/2 - yOffset;
+      const endX = startX + (newX - startX) * bendProgress;
+      const endY = startY + ((newY + nodeH/2 - yOffset) - startY) * bendProgress;
+      drawConnection(startX, startY, endX, endY, '#43d9adcc');
+    }
+
+    if (isDoubly && nIdx === 0 && items.length > 0 && backBendProgress > 0) {
+      const startX = getVisualX(0);
+      const startY = getVisualY(0) + nodeH/2 + yOffset;
+      const endX = newX + (nodeW) * backBendProgress;
+      const endY = startY + ((newY + nodeH/2 + yOffset) - startY) * backBendProgress;
+      drawConnection(startX, startY, endX, endY, '#ff6584cc', 1, true);
+    }
+
+    if (growProgress > 0) {
+      if (nIdx < items.length) {
+        const startX = newX + nodeW; const startY = newY + nodeH / 2 - yOffset;
+        const targetX = getVisualX(nIdx); const targetY = getVisualY(nIdx) + nodeH / 2 - yOffset;
+        const endX = startX + (targetX - startX) * growProgress;
+        const endY = startY + (targetY - startY) * growProgress;
+        drawConnection(startX, startY, endX, endY, '#43d9adcc');
+      }
+      if (isDoubly && nIdx > 0) {
+        const startX = newX; const startY = newY + nodeH/2 + yOffset;
+        const targetX = getVisualX(nIdx - 1) + nodeW; const targetY = getVisualY(nIdx - 1) + nodeH/2 + yOffset;
+        const endX = startX + (targetX - startX) * growProgress;
+        const endY = startY + (targetY - startY) * growProgress;
+        drawConnection(startX, startY, endX, endY, '#ff6584cc', 1, true);
+      }
+    }
   }
 
-  // --- Floating message during cut/attach (in the center of the operation) ---
-  if ((animPhase === 'rewire' || animPhase === 'insert') && step.prevIdx !== null) {
-    const pi = step.prevIdx;
-    const sx = nx(pi) + nodeW;
-    const sy = y + nodeH / 2;
-    const msgY = sy - 42;
+  // --- Circular Link (Locked Colors and Fixed Height) ---
+  if (isCircular && items.length > 0) {
+    const lastIdx = items.length - 1;
+    let circStartX = getVisualX(lastIdx) + nodeW;
+    let circStartY = getVisualY(lastIdx) + nodeH / 2 - yOffset;
+    let circEndX = getVisualX(0);
+    let circEndY = getVisualY(0) + nodeH / 2 - yOffset;
+
+    let switchProgress = 0;
+    if (isInsert) {
+      if (t >= 0.60 && t < 0.80) switchProgress = easeInOut((t - 0.60) / 0.20);
+      else if (t >= 0.80) switchProgress = 1;
+    } else if (isDelete) {
+      switchProgress = arrowProgress;
+    }
+
+    // Only fade if it's the very last item in the list
+    let circAlpha = 1;
+    if (isDelete && items.length <= 1) {
+      circAlpha = 1 - dropProgress; 
+    }
+
+    if (isInsert && nIdx === 0) {
+      circEndX = circEndX + (newX - circEndX) * switchProgress;
+      circEndY = circEndY + ((newY + nodeH / 2 - yOffset) - circEndY) * switchProgress;
+    } else if (isInsert && nIdx === items.length) {
+      circStartX = circStartX + ((newX + nodeW) - circStartX) * switchProgress;
+      circStartY = circStartY + ((newY + nodeH / 2 - yOffset) - circStartY) * switchProgress;
+    } else if (isDelete && dIdx === 0 && items.length > 1) {
+      const targetEndX = getVisualX(1);
+      const targetEndY = getVisualY(1) + nodeH / 2 - yOffset;
+      circEndX = circEndX + (targetEndX - circEndX) * switchProgress;
+      circEndY = circEndY + (targetEndY - circEndY) * switchProgress;
+    } else if (isDelete && dIdx === lastIdx && items.length > 1) {
+      const targetStartX = getVisualX(lastIdx - 1) + nodeW;
+      const targetStartY = getVisualY(lastIdx - 1) + nodeH / 2 - yOffset;
+      circStartX = circStartX + (targetStartX - circStartX) * switchProgress;
+      circStartY = circStartY + (targetStartY - circStartY) * switchProgress;
+    }
+
+    drawCircularConnection(circStartX, circStartY, circEndX, circEndY, '#ff6584', false, circAlpha);
+
+    if (isDoubly) {
+      let circBStartX = getVisualX(0);
+      let circBStartY = getVisualY(0) + nodeH / 2 + yOffset;
+      let circBEndX = getVisualX(lastIdx) + nodeW;
+      let circBEndY = getVisualY(lastIdx) + nodeH / 2 + yOffset;
+
+      if (isInsert && nIdx === 0) {
+        circBStartX = circBStartX + (newX - circBStartX) * switchProgress;
+        circBStartY = circBStartY + ((newY + nodeH / 2 + yOffset) - circBStartY) * switchProgress;
+      } else if (isInsert && nIdx === items.length) {
+        circBEndX = circBEndX + ((newX + nodeW) - circBEndX) * switchProgress;
+        circBEndY = circBEndY + ((newY + nodeH / 2 + yOffset) - circBEndY) * switchProgress;
+      } else if (isDelete && dIdx === 0 && items.length > 1) {
+        const targetStartX = getVisualX(1);
+        const targetStartY = getVisualY(1) + nodeH / 2 + yOffset;
+        circBStartX = circBStartX + (targetStartX - circBStartX) * switchProgress;
+        circBStartY = circBStartY + (targetStartY - circBStartY) * switchProgress;
+      } else if (isDelete && dIdx === lastIdx && items.length > 1) {
+        const targetEndX = getVisualX(lastIdx - 1) + nodeW;
+        const targetEndY = getVisualY(lastIdx - 1) + nodeH / 2 + yOffset;
+        circBEndX = circBEndX + (targetEndX - circBEndX) * switchProgress;
+        circBEndY = circBEndY + (targetEndY - circBEndY) * switchProgress;
+      }
+      
+      drawCircularConnection(circBStartX, circBStartY, circBEndX, circBEndY, '#ff6584', true, circAlpha);
+    }
+  }
+
+  // --- Dynamic Bottom Pointers ---
+  const bottomPointers = {};
+  function addPointer(idx, label, color) {
+    if (idx !== null && idx !== undefined && idx >= 0 && idx < items.length) {
+      if (!bottomPointers[idx]) bottomPointers[idx] = [];
+      if (!bottomPointers[idx].find(p => p.label === label)) bottomPointers[idx].push({ label, color });
+    }
+  }
+
+  // Apply the overridden logic directly
+  addPointer(renderHighlight, 'current', '#43d9ad');
+  addPointer(renderPrev, 'prev', '#a78bfa');
+
+  Object.keys(bottomPointers).forEach(idxStr => {
+    const idx = parseInt(idxStr, 10);
+    
+    // Fade out pointers when deleted
+    let ptrAlpha = isDelete && dIdx === idx ? 1 - dropProgress : 1;
+    if (ptrAlpha <= 0.01) return; 
+
+    const px = getVisualX(idx) + dataW / 2;
+    const pushDown = (isCircular && isDoubly) ? 40 : 0; 
+    const nodeBottomY = getVisualY(idx) + nodeH + pushDown;
+
+    let currentStemY = nodeBottomY + 4;
+
     ctx.save();
-    ctx.font = 'bold 11px JetBrains Mono';
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = '#000';
-    if (t < 0.3) {
-      ctx.fillStyle = '#ff6584';
-      ctx.fillText('✂ CUTTING .next pointer', sx - 40, msgY);
-    } else if (t > 0.6) {
-      ctx.fillStyle = '#22c55e';
-      ctx.fillText('🔗 ATTACHING .next pointer', sx - 50, msgY);
-    } else if (t > 0.45 && t < 0.55) {
-      ctx.fillStyle = '#ffd166';
-      ctx.fillText('⚡ POINTER REDIRECT', sx - 45, msgY);
-    }
-    ctx.restore();
-  }
+    ctx.globalAlpha = ptrAlpha;
 
-  // --- DELETE phase X-mark and free message (unchanged, but enhanced with text) ---
-  if (animPhase === 'delete' && step.deleteIdx >= 0 && step.deleteIdx < items.length) {
-    const di  = step.deleteIdx;
-    const dcx = nx(di) + nodeW/2;
-    const dcy = y + nodeH/2;
-    const fade = easeOut(t);
-    ctx.save();
-    ctx.globalAlpha = 1 - fade*0.5;
-    const crossR = (nodeW/2+6) * Math.min(1, t*3);
-    ctx.strokeStyle='#ff6584'; ctx.lineWidth=3.5;
-    ctx.shadowColor='#ff6584'; ctx.shadowBlur=12;
-    ctx.beginPath();
-    ctx.moveTo(dcx-crossR,dcy-crossR); ctx.lineTo(dcx+crossR,dcy+crossR);
-    ctx.moveTo(dcx+crossR,dcy-crossR); ctx.lineTo(dcx-crossR,dcy+crossR);
-    ctx.stroke(); ctx.shadowBlur=0;
-    if (t > 0.3) {
-      ctx.globalAlpha = Math.min(1, (t-0.3)/0.3);
-      ctx.fillStyle='#ff6584cc'; ctx.font='bold 12px JetBrains Mono';
-      ctx.textAlign='center';
-      ctx.fillText('free(node)', dcx, dcy-nodeH/2-10);
-    }
-    ctx.restore();
-  }
+    bottomPointers[idx].forEach((ptr) => {
+      const boxCenterY = currentStemY + 24; 
+      ctx.beginPath(); ctx.moveTo(px, boxCenterY); ctx.lineTo(px, currentStemY);
+      ctx.strokeStyle = ptr.color; ctx.lineWidth = 2; ctx.stroke();
+      drawArrowHead(ctx, px, currentStemY, -Math.PI / 2, ptr.color);
 
-  // --- Legend (unchanged) ---
-  const legendItems2 = [
-    ['#43d9adcc','.next arrow'],
-    ['#a78bfacc','pointer being rewired'],
-    ['#ef444488','.prev arrow (doubly)'],
-    ['#ff658488','→ null'],
-    ['#ff6584','delete / cut'],
-    ['#ffd166','new node'],
-  ];
-  ctx.font = '600 9px Inter';
-  let lx2 = 8; const ly2 = H - 10;
-  legendItems2.forEach(([col, lbl]) => {
-    ctx.fillStyle = col;
-    ctx.beginPath(); ctx.roundRect(lx2, ly2-8, 8, 8, 2); ctx.fill();
-    ctx.fillStyle = isLight ? '#333366' : '#8888aa';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(lbl, lx2+11, ly2-4);
-    lx2 += 11 + ctx.measureText(lbl).width + 16;
+      const lblW = Math.max(48, ctx.measureText(ptr.label).width + 16);
+      ctx.fillStyle = ptr.color + '22';
+      ctx.beginPath(); ctx.roundRect(px - lblW / 2, boxCenterY - 10, lblW, 20, 4); ctx.fill();
+      ctx.strokeStyle = ptr.color; ctx.lineWidth = 1.5; ctx.stroke();
+      
+      ctx.fillStyle = ptr.color; ctx.font = 'bold 10px JetBrains Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(ptr.label, px, boxCenterY);
+      currentStemY = boxCenterY + 10;
+    });
+
+    ctx.restore();
   });
   ctx.textBaseline = 'alphabetic';
 }
-
 
 // =====================================================
 // BST VISUALIZATION
@@ -6399,74 +5663,72 @@ function bstInsert(root, val) {
   return root;
 }
 
-function drawBST(highlightVal=null, traversalPath=[]) {
-  const panel   = document.getElementById('viz-panel');
-  const panelW  = panel ? panel.clientWidth  || 700 : 700;
-  const panelH  = panel ? panel.clientHeight || 400 : 400;
+function drawBST(currentVal = null, visitedVals = [], newNodeVal = null, isAnimated = false, t = 1) {
+  const panel = document.getElementById('viz-panel');
+  const panelW = panel ? panel.clientWidth || 700 : 700;
+  const panelH = panel ? panel.clientHeight || 400 : 400;
   const isLight = document.body.classList.contains('light');
-  const root    = dsState.bst;
+  const root = dsState.bst;
 
   if (!root) {
-    canvas.width  = panelW;
+    canvas.width = panelW;
     canvas.height = panelH;
     setDsScroll(false);
     ctx.fillStyle = isLight ? '#f8f8fc' : '#0a0a12';
     ctx.fillRect(0, 0, panelW, panelH);
     ctx.fillStyle = isLight ? '#555' : '#888';
-    ctx.font = '14px Inter'; ctx.textAlign = 'center';
-    ctx.fillText('Tree is empty. Insert values to begin.', panelW/2, panelH/2);
+    ctx.font = '14px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tree is empty. Insert values to begin.', panelW / 2, panelH / 2);
     return;
   }
 
-  // ── Compute layout using inorder rank (Reingold-Tilford style) ──
-  const R = 24;
-  const HGAP = R * 2 + 14;
-  const VGAP = 72;
-  const PAD  = 32;
-
+  // Layout (unchanged)
   let inorderIdx = 0;
-  const posMap = new Map();   // node → {x (inorder rank), depth}
-
+  const posMap = new Map();
   function assignPos(node, depth) {
     if (!node) return;
-    assignPos(node.left,  depth + 1);
+    assignPos(node.left, depth + 1);
     posMap.set(node, { col: inorderIdx++, depth });
     assignPos(node.right, depth + 1);
   }
   assignPos(root, 0);
 
-  const maxCol   = Math.max(...[...posMap.values()].map(p => p.col));
+  const maxCol = Math.max(...[...posMap.values()].map(p => p.col));
   const maxDepth = Math.max(...[...posMap.values()].map(p => p.depth));
+
+  const R = 24;
+  const HGAP = R * 2 + 14;
+  const VGAP = 72;
+  const PAD = 32;
 
   const totalW = Math.max(panelW, (maxCol + 1) * HGAP + PAD * 2);
   const totalH = Math.max(panelH, (maxDepth + 1) * VGAP + PAD * 2 + R);
 
-  canvas.width  = totalW;
+  canvas.width = totalW;
   canvas.height = totalH;
   setDsScroll(totalW > panelW || totalH > panelH);
 
   ctx.fillStyle = isLight ? '#f8f8fc' : '#0a0a12';
   ctx.fillRect(0, 0, totalW, totalH);
 
-  const offX = PAD + (totalW - PAD*2 - (maxCol)*HGAP) / 2;
+  const offX = PAD + (totalW - PAD * 2 - maxCol * HGAP) / 2;
   function nx(node) { return offX + posMap.get(node).col * HGAP; }
   function ny(node) { return PAD + R + posMap.get(node).depth * VGAP; }
 
-  // Draw edges first
+  // Draw edges (unchanged)
   function drawEdges(node) {
     if (!node) return;
     if (node.left) {
-      ctx.strokeStyle = isLight ? '#9090ccaa' : '#6c63ff55';
-      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(nx(node), ny(node) + R);
       ctx.lineTo(nx(node.left), ny(node.left) - R);
+      ctx.strokeStyle = isLight ? '#9090ccaa' : '#6c63ff55';
+      ctx.lineWidth = 2;
       ctx.stroke();
       drawEdges(node.left);
     }
     if (node.right) {
-      ctx.strokeStyle = isLight ? '#9090ccaa' : '#6c63ff55';
-      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(nx(node), ny(node) + R);
       ctx.lineTo(nx(node.right), ny(node.right) - R);
@@ -6476,27 +5738,65 @@ function drawBST(highlightVal=null, traversalPath=[]) {
   }
   drawEdges(root);
 
+  const visitedSet = new Set(visitedVals);
+
   // Draw nodes
-  const travSet = new Set(traversalPath);
   function drawNodes(node) {
     if (!node) return;
     const x = nx(node), y = ny(node);
-    const isHl   = node.val === highlightVal;
-    const inTrav = travSet.has(node.val);
-    let fill, stroke, textCol;
-    if (isHl)        { fill='#ffd166'; stroke='#f59e0b'; textCol='#1a1a2e'; }
-    else if (inTrav) { fill='#22c55e'; stroke='#16a34a'; textCol='#fff'; }
-    else             { fill=isLight?'#e8eaf6':'#22223a'; stroke=isLight?'#6c63ff':'#6c63ff'; textCol=isLight?'#1a1a2e':'#fff'; }
+    const isCurrent = (node.val === currentVal);
+    const isVisited = visitedSet.has(node.val);
+    let fill, stroke, textCol, glow = 0;
+    let radius = R;
 
-    ctx.shadowColor = isHl ? '#f59e0b' : 'transparent';
-    ctx.shadowBlur  = isHl ? 12 : 0;
-    ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI*2);
-    ctx.fillStyle = fill; ctx.fill();
-    ctx.strokeStyle = stroke; ctx.lineWidth = 2.5; ctx.stroke();
+    if (isCurrent && isAnimated) {
+      // Pulsing ring for current node
+      glow = 14 * Math.sin(t * Math.PI * 2);
+      fill = '#ffd166';
+      stroke = '#f59e0b';
+      textCol = '#1a1a2e';
+      radius = R + 4 * Math.sin(t * Math.PI);
+    } else if (isCurrent) {
+      fill = '#ffd166';
+      stroke = '#f59e0b';
+      textCol = '#1a1a2e';
+    } else if (isVisited) {
+      fill = '#22c55e';
+      stroke = '#16a34a';
+      textCol = '#fff';
+    } else {
+      fill = isLight ? '#e8eaf6' : '#22223a';
+      stroke = isLight ? '#6c63ff' : '#6c63ff';
+      textCol = isLight ? '#1a1a2e' : '#fff';
+    }
+
+    if (glow) {
+      ctx.shadowColor = stroke;
+      ctx.shadowBlur = glow;
+    }
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
     ctx.shadowBlur = 0;
 
-    ctx.fillStyle = textCol; ctx.font = 'bold 13px JetBrains Mono';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (isCurrent && isAnimated) {
+      // Outer ring that expands slightly
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = textCol;
+    ctx.font = `bold 13px JetBrains Mono`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillText(String(node.val), x, y);
     ctx.textBaseline = 'alphabetic';
 
@@ -6504,6 +5804,168 @@ function drawBST(highlightVal=null, traversalPath=[]) {
     drawNodes(node.right);
   }
   drawNodes(root);
+
+  // Show visited list
+  if (visitedVals.length > 0) {
+    ctx.fillStyle = isLight ? '#6666aa' : '#8888aa';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Visited: [${visitedVals.join(', ')}]`, 12, totalH - 12);
+  }
+}
+function genBSTInorderSteps(root) {
+  const steps = [];
+  const visited = [];
+
+  function inorder(node, parent = null) {
+    if (!node) return;
+    // Go left
+    if (node.left) {
+      steps.push({ current: node.left.val, visited: [...visited], msg: `Go left to ${node.left.val}` });
+      inorder(node.left, node);
+    }
+    // Visit node
+    visited.push(node.val);
+    steps.push({ current: node.val, visited: [...visited], msg: `Visit ${node.val}` });
+    // Go right
+    if (node.right) {
+      steps.push({ current: node.right.val, visited: [...visited], msg: `Go right to ${node.right.val}` });
+      inorder(node.right, node);
+      // After processing right subtree, return to this node's parent
+      if (parent) {
+        steps.push({ current: parent.val, visited: [...visited], msg: `Return to ${parent.val}` });
+      }
+    } else if (parent) {
+      // No right child, so after visiting node, go back to parent
+      steps.push({ current: parent.val, visited: [...visited], msg: `Return to ${parent.val}` });
+    }
+  }
+
+  if (root) {
+    steps.push({ current: root.val, visited: [...visited], msg: `Start at root ${root.val}` });
+    inorder(root);
+  }
+  return steps;
+}
+function genBSTPreorderSteps(root) {
+  const steps = [];
+  const visited = [];
+  if (!root) return steps;
+
+  // Stack elements: { node, state, parent, dir }
+  // state: 0 = before processing (will visit), 1 = after left, 2 = after right
+  const stack = [{ node: root, state: 0, parent: null, dir: null }];
+
+  while (stack.length) {
+    const top = stack[stack.length - 1];
+    const { node, state, parent, dir } = top;
+
+    if (state === 0) {
+      // Move to this node (if coming from parent)
+      if (parent) {
+        steps.push({ current: node.val, visited: [...visited], msg: `Go ${dir} to ${node.val}` });
+      } else {
+        steps.push({ current: node.val, visited: [...visited], msg: `Start at root ${node.val}` });
+      }
+      // Visit node
+      visited.push(node.val);
+      steps.push({ current: node.val, visited: [...visited], msg: `Visit ${node.val}` });
+      top.state = 1; // next: process left subtree
+    } 
+    else if (state === 1) {
+      // Process left subtree
+      if (node.left) {
+        stack.push({ node: node.left, state: 0, parent: node, dir: 'left' });
+        top.state = 2; // after left, we'll handle right
+      } else {
+        top.state = 2;
+      }
+    }
+    else if (state === 2) {
+      // Process right subtree
+      if (node.right) {
+        stack.push({ node: node.right, state: 0, parent: node, dir: 'right' });
+        top.state = 3; // after right, pop
+      } else {
+        top.state = 3;
+      }
+    }
+    else if (state === 3) {
+      // Done with this node, pop it
+      stack.pop();
+      // After popping, return to the new top (parent)
+      if (stack.length) {
+        const parentNode = stack[stack.length - 1].node;
+        steps.push({ current: parentNode.val, visited: [...visited], msg: `Return to ${parentNode.val}` });
+      }
+    }
+  }
+  return steps;
+}
+
+function genBSTSearchSteps(root, target) {
+  const steps = [];
+  const path = [];
+  let current = root;
+  let parent = null;
+
+  while (current) {
+    // Record moving to this node
+    path.push(current.val);
+    steps.push({ current: current.val, visited: [...path], msg: `Comparing ${current.val} with target ${target}` });
+
+    if (current.val === target) {
+      // Found it
+      steps.push({ current: current.val, visited: [...path], msg: `✅ Found ${target}!` });
+      return steps;
+    } else if (target < current.val) {
+      steps.push({ current: current.val, visited: [...path], msg: `${target} < ${current.val}, go left` });
+      parent = current;
+      current = current.left;
+    } else {
+      steps.push({ current: current.val, visited: [...path], msg: `${target} > ${current.val}, go right` });
+      parent = current;
+      current = current.right;
+    }
+  }
+
+  // Not found
+  steps.push({ current: null, visited: path, msg: `❌ ${target} not found in the tree` });
+  return steps;
+}
+function genBSTPostorderSteps(root) {
+  const steps = [];
+  const visited = [];
+  if (!root) return steps;
+  const stack = [root];
+  const outputStack = [];
+  while (stack.length) {
+    const node = stack.pop();
+    outputStack.push(node);
+    if (node.left) stack.push(node.left);
+    if (node.right) stack.push(node.right);
+  }
+  // Now outputStack contains nodes in postorder (root at end)
+  while (outputStack.length) {
+    const node = outputStack.pop();
+    visited.push(node.val);
+    steps.push({ current: node.val, visited: [...visited], msg: `Visit ${node.val}` });
+  }
+  return steps;
+}
+function genBSTBFSSteps(root) {
+  const steps = [];
+  const visited = [];
+  if (!root) return steps;
+  const queue = [root];
+  while (queue.length) {
+    const node = queue.shift();
+    visited.push(node.val);
+    steps.push({ current: node.val, visited: [...visited], msg: `Visit ${node.val}` });
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+  return steps;
 }
 
 
@@ -7316,61 +6778,187 @@ function exitFullscreen() {
 function _syncFsHud() {
   const startBtn    = document.getElementById('fs-hud-start');
   const pauseBtn    = document.getElementById('fs-hud-pause');
+  const stepFwdBtn  = document.querySelector('#fs-hud .hud-btn[onclick="ctrlStepFwd()"]');
+  const stepBackBtn = document.querySelector('#fs-hud .hud-btn[onclick="ctrlStepBack()"]');
+  const resetBtn    = document.querySelector('#fs-hud .hud-btn[onclick="ctrlReset()"]');
+  const speedGroup  = document.querySelector('#fs-hud .hud-speed');
   const runGraphBtn = document.getElementById('fs-hud-run-graph');
   const llOpsDiv    = document.getElementById('fs-hud-ll-ops');
+  const exitBtn     = document.querySelector('#fs-hud .hud-btn.exit');
 
   if (!startBtn) return;
 
   const isGraph = ['bfs', 'dfs', 'dijkstra'].includes(state.algo);
   const isLL    = ['singly-ll', 'doubly-ll', 'circular-ll', 'ordered-ll'].includes(state.algo);
+  const isArray = state.algo === 'array-ds';
+  const isStack = state.algo === 'stack-ds';
+  const isQueue = state.algo === 'queue-ds';
+  const isBST   = state.algo === 'bst';
+  const isSortingOrSearching = ['bubble','selection','insertion','merge','quick','heap','counting','radix',
+    'linear-search','binary-search','jump-search'].includes(state.algo);
+
   const graphLabel = {
     bfs: '▶ Run BFS',
     dfs: '▶ Run DFS',
     dijkstra: '▶ Run Dijkstra'
   }[state.algo] || '▶ Run';
 
-  // Graph mode: show Run Graph button only
+  // Graph mode: show Run Graph button
   if (runGraphBtn) {
     runGraphBtn.style.display = isGraph ? '' : 'none';
     runGraphBtn.textContent   = graphLabel;
   }
 
-  // LL mode: hide Start, show Pause, and fill dynamic ops
+  // Array: hide all controls except exit
+  if (isArray) {
+    startBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (stepFwdBtn) stepFwdBtn.style.display = 'none';
+    if (stepBackBtn) stepBackBtn.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (speedGroup) speedGroup.style.display = 'none';
+    if (llOpsDiv) llOpsDiv.style.display = 'none';
+    if (runGraphBtn) runGraphBtn.style.display = 'none';
+    if (exitBtn) exitBtn.style.display = '';
+    return;
+  }
+
+  // Stack: custom HUD (Push, Pop, Peek)
+  if (isStack) {
+    startBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (stepFwdBtn) stepFwdBtn.style.display = 'none';
+    if (stepBackBtn) stepBackBtn.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (speedGroup) speedGroup.style.display = 'none';
+    if (runGraphBtn) runGraphBtn.style.display = 'none';
+
+    if (llOpsDiv) {
+      llOpsDiv.style.display = 'flex';
+      llOpsDiv.innerHTML = `
+        <div class="hud-sep"></div>
+        <input id="fs-stack-val" class="ctrl-input" placeholder="Value" style="width:80px;height:26px;font-size:10px;padding:0 5px;flex-shrink:0">
+        <button class="hud-btn success" onclick="fsStackPush()">⬆ Push</button>
+        <button class="hud-btn danger"  onclick="fsStackPop()">⬇ Pop</button>
+        <button class="hud-btn"          onclick="fsStackPeek()">👁️ Peek</button>
+      `;
+    }
+    if (exitBtn) exitBtn.style.display = '';
+    return;
+  }
+
+  // Queue: custom HUD (Enqueue, Dequeue) – no Peek
+  if (isQueue) {
+    startBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (stepFwdBtn) stepFwdBtn.style.display = 'none';
+    if (stepBackBtn) stepBackBtn.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (speedGroup) speedGroup.style.display = 'none';
+    if (runGraphBtn) runGraphBtn.style.display = 'none';
+
+    if (llOpsDiv) {
+      llOpsDiv.style.display = 'flex';
+      llOpsDiv.innerHTML = `
+        <div class="hud-sep"></div>
+        <input id="fs-queue-val" class="ctrl-input" placeholder="Value" style="width:80px;height:26px;font-size:10px;padding:0 5px;flex-shrink:0">
+        <button class="hud-btn success" onclick="fsQueueEnqueue()">⬆ Enqueue</button>
+        <button class="hud-btn danger"  onclick="fsQueueDequeue()">⬇ Dequeue</button>
+      `;
+    }
+    if (exitBtn) exitBtn.style.display = '';
+    return;
+  }
+
+  // BST: custom HUD
+  if (isBST) {
+    startBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (stepFwdBtn) stepFwdBtn.style.display = 'none';
+    if (stepBackBtn) stepBackBtn.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (speedGroup) speedGroup.style.display = 'none';
+    if (runGraphBtn) runGraphBtn.style.display = 'none';
+
+    if (llOpsDiv) {
+      llOpsDiv.style.display = 'flex';
+      llOpsDiv.innerHTML = `
+        <div class="hud-sep"></div>
+        <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+          <input id="fs-bst-val" class="ctrl-input" placeholder="Value" style="width:70px; height:26px;">
+          <button class="hud-btn success" onclick="fsBSTInsert()">➕ Insert</button>
+          <button class="hud-btn" onclick="fsBSTSearch()">🔍 Search</button>
+          <button class="hud-btn danger" onclick="fsBSTDelete()">❌ Delete</button>
+          <div class="hud-sep"></div>
+          <button class="hud-btn" onclick="dsBSTInorder()">Inorder</button>
+          <button class="hud-btn" onclick="dsBSTPreorder()">Preorder</button>
+          <button class="hud-btn" onclick="dsBSTPostorder()">Postorder</button>
+          <button class="hud-btn" onclick="dsBSTBFS()">Level-order</button>
+          <button class="hud-btn danger" onclick="dsClear()">🗑️ Clear</button>
+        </div>
+      `;
+    }
+    if (exitBtn) exitBtn.style.display = '';
+    return;
+  }
+
+  // Default: sorting, searching, graphs (except BFS/DFS/Dijkstra already handled above), trees, etc.
+  // For sorting and searching, show standard controls.
+  // For graphs, we already have a branch above? Actually we have isGraph branch later, but we'll unify.
+  // But we already covered isGraph earlier? We'll let the default handle sorting/searching.
+  // For now, we'll show standard controls for all remaining algorithms, including radix.
   startBtn.style.display = (isGraph || isLL) ? 'none' : '';
-  pauseBtn.style.display = isGraph ? 'none' : '';
+  if (pauseBtn) pauseBtn.style.display = isGraph ? 'none' : '';
+  if (stepFwdBtn) stepFwdBtn.style.display = '';
+  if (stepBackBtn) stepBackBtn.style.display = '';
+  if (resetBtn) resetBtn.style.display = '';
+  if (speedGroup) speedGroup.style.display = '';
+
   startBtn.disabled    = state.running && !state.paused;
   pauseBtn.disabled    = !state.running;
   pauseBtn.textContent = state.paused ? '▶ Continue' : '⏸ Pause';
 
-  // ========== DYNAMIC LL OPS ==========
+  // Linked lists HUD (for non‑ordered, non‑stack, non‑queue)
   if (!llOpsDiv) return;
 
   if (state.algo === 'ordered-ll') {
-    // Ordered list: only sorted insert, delete by value, and search
     llOpsDiv.style.display = 'flex';
     llOpsDiv.innerHTML = `
       <div class="hud-sep"></div>
       <input id="fs-ll-val" class="ctrl-input" placeholder="Val" style="width:64px;height:26px;font-size:10px;padding:0 5px;flex-shrink:0">
-      <button class="hud-btn success" onclick="fsOrderedInsert()" title="Insert maintaining sorted order">+ Insert</button>
-      <button class="hud-btn danger"  onclick="fsOrderedDelete()" title="Delete by value">− Delete</button>
-      <button class="hud-btn"          onclick="fsOrderedSearch()" title="Search for value">🔍 Search</button>
+      <button class="hud-btn success" onclick="fsOrderedInsert()">+ Insert</button>
+      <button class="hud-btn danger"  onclick="fsOrderedDelete()">− Delete</button>
+      <button class="hud-btn"          onclick="fsOrderedSearch()">🔍 Search</button>
     `;
-  } else if (isLL) {
-    // Singly, doubly, circular: show full set of operations
+  } else if (['singly-ll','doubly-ll','circular-ll'].includes(state.algo)) {
     llOpsDiv.style.display = 'flex';
     llOpsDiv.innerHTML = `
       <div class="hud-sep"></div>
-      <input id="fs-ll-val" class="ctrl-input" placeholder="Val" style="width:54px;height:26px;font-size:10px;padding:0 5px;flex-shrink:0">
-      <input id="fs-ll-idx" class="ctrl-input" placeholder="Pos" style="width:38px;height:26px;font-size:10px;padding:0 5px;flex-shrink:0">
-      <button class="hud-btn success" onclick="fsLLInsertBegin()" title="Insert at head">+Head</button>
-      <button class="hud-btn success" onclick="fsLLInsertEnd()"   title="Insert at tail">+Tail</button>
-      <button class="hud-btn success" onclick="fsLLInsertPos()"   title="Insert at position">+Pos</button>
-      <button class="hud-btn danger"  onclick="fsLLDeleteBegin()" title="Delete head">−Head</button>
-      <button class="hud-btn danger"  onclick="fsLLDeleteEnd()"   title="Delete tail">−Tail</button>
-      <button class="hud-btn danger"  onclick="fsLLDeleteVal()"   title="Delete by value">−Val</button>
+      <div style="display:flex; gap:5px;">
+        <button class="hud-btn success" onclick="fsShowInsertMenu()">+ Insert</button>
+        <button class="hud-btn danger"  onclick="fsShowDeleteMenu()">- Delete</button>
+      </div>
+      <div id="fs-ll-insert-menu" style="display:none; margin-left:5px;">
+        <input id="fs-ll-insert-val" class="ctrl-input" placeholder="Value (number)" style="width:100px; margin-right:5px;">
+        <button class="hud-btn" onclick="fsLLInsertHead()">Head</button>
+        <button class="hud-btn" onclick="fsLLInsertTail()">Tail</button>
+        <button class="hud-btn" onclick="fsShowInsertPosition()">Position</button>
+        <div id="fs-ll-insert-position" style="display:none; margin-top:5px;">
+          <input id="fs-ll-insert-idx" class="ctrl-input" placeholder="Index" style="width:60px;">
+          <button class="hud-btn success" onclick="fsLLInsertPos()">Insert</button>
+        </div>
+      </div>
+      <div id="fs-ll-delete-menu" style="display:none; margin-left:5px;">
+        <button class="hud-btn" onclick="fsLLDeleteHead()">Head</button>
+        <button class="hud-btn" onclick="fsLLDeleteTail()">Tail</button>
+        <button class="hud-btn" onclick="fsShowDeleteValue()">By Value</button>
+        <div id="fs-ll-delete-value" style="display:none; margin-top:5px;">
+          <input id="fs-ll-delete-val" class="ctrl-input" placeholder="Value (number)" style="width:70px;">
+          <button class="hud-btn danger" onclick="fsLLDeleteByValue()">Delete</button>
+        </div>
+      </div>
     `;
   } else {
-    // Not a linked list: hide the ops div entirely
     llOpsDiv.style.display = 'none';
     llOpsDiv.innerHTML = '';
   }
@@ -7438,17 +7026,32 @@ function updateSizeLabel(count) {
 
 function updateSize(v) {
   let n = parseInt(v);
-  // Hard cap at 20 for all algorithms
-  if (n > 20) { n = 20; document.getElementById('size-range').value = 20; }
-  // Merge sort capped at 16 — tree layout needs to fit clearly
-  if (state.algo === 'merge' && n > 16) {
-    n = 16;
-    document.getElementById('size-range').value = 16;
+  let maxAllowed = 20; // default
+
+  // Determine max based on current algorithm
+  if (state.algo === 'merge') maxAllowed = 16;
+  else if (state.algo === 'bst' || state.algo === 'avl' || state.algo === 'heap-tree' || state.algo === 'binary-tree') maxAllowed = 12;
+  else if (state.algo === 'bfs' || state.algo === 'dfs' || state.algo === 'dijkstra') maxAllowed = 12;
+
+  if (n > maxAllowed) {
+    n = maxAllowed;
+    const sizeRange = document.getElementById('size-range');
+    if (sizeRange) sizeRange.value = n;
   }
+
   state.size = n;
   document.getElementById('size-val').textContent = n;
   document.getElementById('stat-size').textContent = n;
   generateRandom();
+
+  // Force reflow to update visual track (in case max changed)
+  const sizeRange = document.getElementById('size-range');
+  if (sizeRange && parseInt(sizeRange.max, 10) !== maxAllowed) {
+    sizeRange.max = maxAllowed;
+    sizeRange.style.display = 'none';
+    sizeRange.offsetHeight;
+    sizeRange.style.display = '';
+  }
 }
 
 function setStep(idx) {
@@ -7472,7 +7075,7 @@ function setStep(idx) {
 }
 
 function highlightCodeLine(line) {
-  // If the current step has a per-language map, use it
+   console.log("highlightCodeLine called with line =", line);
   const step = state.steps[state.stepIdx];
   if (step && step.codeLines) {
     const lang = state.lang || 'cpp';
@@ -7496,6 +7099,7 @@ function updateCode() {
 function renderCode() {
   const lines = getCode(state.algo, state.lang);
   const content = document.getElementById('code-content');
+  content.innerHTML = ''; // <-- clear any leftover text
   content.innerHTML = lines.map((line, i) =>
     `<div class="code-line" id="cl-${i}"><span class="ln">${i+1}</span>${escHtml(line)}</div>`
   ).join('');
@@ -7593,43 +7197,43 @@ function updateComplexity(opKey) {
   const isSortSearch = ['bubble','selection','insertion','merge','quick','heap','counting','radix',
     'linear-search','binary-search','jump-search'].includes(key);
 
-  // All individual sort-mode elements
   const sortEls = ['cx-sort-block-1','cx-sep-1','cx-sort-block-2','cx-sep-2',
                    'cx-sort-block-3','cx-sep-3','cx-sort-block-space'];
-  // DS-mode elements
   const dsEls   = ['cx-ops-grid','cx-space-ds'];
 
   if (isSortSearch) {
-    // Show sort items, hide DS items
+    // Sorting or searching: show time complexities
     sortEls.forEach(id => { const el=document.getElementById(id); if(el) el.style.display=''; });
     dsEls.forEach(id   => { const el=document.getElementById(id); if(el) el.style.display='none'; });
 
-    const lbl1 = document.getElementById('cx-lbl-1');
-    const lbl2 = document.getElementById('cx-lbl-2');
-    const lbl3 = document.getElementById('cx-lbl-3');
-    const val1 = document.getElementById('cx-val-1');
-    const val2 = document.getElementById('cx-val-2');
-    const val3 = document.getElementById('cx-val-3');
-    if (lbl1) lbl1.textContent = 'Best';
-    if (lbl2) lbl2.textContent = 'Average';
-    if (lbl3) lbl3.textContent = 'Worst';
-    if (val1) val1.textContent = cx.best  || '?';
-    if (val2) val2.textContent = cx.avg   || '?';
-    if (val3) val3.textContent = cx.worst || '?';
-    const spaceEl = document.getElementById('cx-space-val');
-    if (spaceEl) spaceEl.textContent = cx.space || '?';
-  } 
-  else {
-    // Hide sort items, show DS items
+    document.getElementById('cx-lbl-1').textContent = 'Best';
+    document.getElementById('cx-lbl-2').textContent = 'Average';
+    document.getElementById('cx-lbl-3').textContent = 'Worst';
+    document.getElementById('cx-val-1').textContent = cx.best  || '?';
+    document.getElementById('cx-val-2').textContent = cx.avg   || '?';
+    document.getElementById('cx-val-3').textContent = cx.worst || '?';
+    document.getElementById('cx-space-val').textContent = cx.space || '?';
+  }
+  else if (key === 'array-ds') {
+    // Array: hide operation grid, only show space
     sortEls.forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
-
+    const grid = document.getElementById('cx-ops-grid');
+    if (grid) grid.style.display = 'none';
+    const spaceEl = document.getElementById('cx-space-ds');
+    if (spaceEl) {
+      spaceEl.style.display = 'inline-block';
+      spaceEl.textContent = `Space: ${cx.space || 'O(n)'}`;
+    }
+  }
+  else {
+    // All other data structures: show operation grid
+    sortEls.forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
     const ops = dsOps[key] || [
       ['Access', cx.access||'?', true],
       ['Search', cx.search||'?', true],
       ['Insert', cx.insert||'?', false],
       ['Delete', cx.delete||'?', true],
     ];
-
     const grid = document.getElementById('cx-ops-grid');
     if (grid) {
       grid.style.display = 'flex';
@@ -7653,6 +7257,12 @@ function updateDsOps() {
   const searchAlgos  = ['linear-search','binary-search','jump-search'];
   if ([...sortingAlgos, ...searchAlgos].includes(state.algo)) { return; }
 
+  // Special case: Array – no operation buttons
+  if (state.algo === 'array-ds') {
+    ops.innerHTML = '';
+    return;
+  }
+
   if (state.algo === 'stack-ds') {
     ops.innerHTML = `
       <input class="ctrl-input" id="ds-val" placeholder="Value" style="margin-bottom:4px"/>
@@ -7671,32 +7281,38 @@ function updateDsOps() {
         <button class="btn"         onclick="dsPeekQ()">Peek</button>
         <button class="btn"         onclick="dsClear()">Clear</button>
       </div>`;
-  } else if (state.algo === 'array-ds') {
-  // Array is read-only – no operation buttons
-  ops.innerHTML = '';
-  return;
-} else if (['singly-ll','doubly-ll','circular-ll'].includes(state.algo)) {
-    ops.innerHTML = `
-      <input class="ctrl-input" id="ds-val" placeholder="Value" style="margin-bottom:4px"/>
-      <input class="ctrl-input" id="ds-idx" placeholder="Position (insert only)" style="margin-bottom:4px"/>
-      <div style="font-size:10px;color:#8888aa;margin-bottom:4px">INSERT</div>
-      <div class="ctrl-btns" style="margin-bottom:4px">
-        <button class="btn success" onclick="dsLLInsertBegin()" title="Insert at head">⬆ Begin</button>
-        <button class="btn success" onclick="dsLLInsertEnd()"   title="Insert at tail">⬇ End</button>
-        <button class="btn success" onclick="dsLLInsertPos()"   title="Insert at position">📍 Position</button>
-      </div>
-      <div style="font-size:10px;color:#8888aa;margin-bottom:4px">DELETE (by value)</div>
-      <div class="ctrl-btns" style="margin-bottom:4px">
-        <button class="btn danger" onclick="dsLLDeleteBegin()" title="Delete head node">⬆ Head</button>
-        <button class="btn danger" onclick="dsLLDeleteEnd()"   title="Delete tail node">⬇ Tail</button>
-        <button class="btn danger" onclick="dsLLDeleteVal()"   title="Delete by value — enter value above">✖ By Value</button>
-      </div>
+ } else if (['singly-ll','doubly-ll','circular-ll'].includes(state.algo)) {
+  ops.innerHTML = `
+    <div class="ctrl-btns" style="margin-bottom:6px">
+      <button class="btn success" id="ll-insert-main-btn" onclick="showInsertMenu()">+ Insert</button>
+      <button class="btn danger"  id="ll-delete-main-btn" onclick="showDeleteMenu()">- Delete</button>
+    </div>
+    <div id="ll-insert-menu" style="display:none; margin-top:8px;">
+      <input class="ctrl-input" id="ll-insert-val" placeholder="Value (number)" style="width:100%; margin-bottom:6px;">
       <div class="ctrl-btns">
-        <button class="btn" onclick="dsLLReverse()">↔ Reverse</button>
-        <button class="btn" onclick="dsClear()">Clear</button>
+        <button class="btn" onclick="llInsertHead()">Head</button>
+        <button class="btn" onclick="llInsertTail()">Tail</button>
+        <button class="btn" onclick="showInsertPosition()">Position</button>
       </div>
-      <div style="font-size:10px;color:#43d9ad;margin-top:6px">▶ Use Play/Pause/Step to control animation</div>`;
-  } else if (state.algo === 'ordered-ll') {
+      <div id="ll-insert-position" style="display:none; margin-top:4px;">
+        <input class="ctrl-input" id="ll-insert-idx" placeholder="Index" style="width:100%;">
+        <button class="btn success" onclick="llInsertPos()">Insert at Position</button>
+      </div>
+    </div>
+    <div id="ll-delete-menu" style="display:none; margin-top:8px;">
+      <div class="ctrl-btns">
+        <button class="btn" onclick="llDeleteHead()">Head</button>
+        <button class="btn" onclick="llDeleteTail()">Tail</button>
+        <button class="btn" onclick="showDeleteValue()">By Value</button>
+      </div>
+      <div id="ll-delete-value" style="display:none; margin-top:4px;">
+        <input class="ctrl-input" id="ll-delete-val" placeholder="Value (number)" style="width:100%;">
+        <button class="btn danger" onclick="llDeleteByValue()">Delete</button>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#43d9ad;margin-top:6px">▶ Use Play/Pause/Step to control animation</div>
+  `;
+} else if (state.algo === 'ordered-ll') {
     ops.innerHTML = `
       <input class="ctrl-input" id="ds-val" placeholder="Value" style="margin-bottom:4px"/>
       <div class="ctrl-btns" style="margin-bottom:4px">
@@ -7711,19 +7327,28 @@ function updateDsOps() {
       </div>
       <div style="font-size:10px;color:#43d9ad;margin-top:6px">▶ Use Play/Pause/Step to control animation</div>`;
   } else if (state.algo === 'bst') {
-    ops.innerHTML = `
-      <input class="ctrl-input" id="ds-val" placeholder="Value" style="margin-bottom:4px"/>
-      <div class="ctrl-btns">
-        <button class="btn success" onclick="dsBSTInsert()">Insert</button>
-        <button class="btn"         onclick="dsBSTSearch()">Search</button>
-        <button class="btn danger"  onclick="dsBSTDelete()">Delete</button>
-        <button class="btn"         onclick="dsBSTInorder()">Inorder</button>
-        <button class="btn"         onclick="dsBSTPreorder()">Preorder</button>
-        <button class="btn"         onclick="dsBSTPostorder()">Postorder</button>
-        <button class="btn"         onclick="dsBSTBFS()">BFS Level</button>
-        <button class="btn danger"  onclick="dsClear()">Clear</button>
-      </div>`;
-  } else if (state.algo === 'binary-tree') {
+  ops.innerHTML = `
+    <div class="ctrl-group" style="margin-bottom:8px;">
+      <input class="ctrl-input" id="ds-val" placeholder="Value (number)" style="width:100%; margin-bottom:6px;">
+      <div class="ctrl-btns" style="gap:6px; flex-wrap:wrap;">
+        <button class="btn success" onclick="dsBSTInsert()" title="Insert a value">➕ Insert</button>
+        <button class="btn" onclick="dsBSTSearch()" title="Search for a value">🔍 Search</button>
+        <button class="btn danger" onclick="dsBSTDelete()" title="Delete a value">❌ Delete</button>
+        <button class="btn" onclick="dsBSTBFS()" title="Level-order traversal">🌿 Level-order</button>
+        <button class="btn danger" onclick="dsClear()" title="Clear the tree">🗑️ Clear</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label" style="margin-bottom:4px;">Traversals</div>
+      <div class="ctrl-btns" style="gap:6px; flex-wrap:wrap;">
+        <button class="btn" onclick="dsBSTInorder()" title="Inorder (sorted)">Inorder</button>
+        <button class="btn" onclick="dsBSTPreorder()" title="Preorder">Preorder</button>
+        <button class="btn" onclick="dsBSTPostorder()" title="Postorder">Postorder</button>
+      </div>
+    </div>
+    <div style="font-size:10px; color:#43d9ad; margin-top:8px;">📌 Insert, Search, Delete accept only numbers.</div>
+  `;
+} else if (state.algo === 'binary-tree') {
     ops.innerHTML = `
       <input class="ctrl-input" id="ds-val" placeholder="Value" style="margin-bottom:4px"/>
       <div class="ctrl-btns">
@@ -7773,37 +7398,161 @@ function updateDsOps() {
 }
 
 // DS Operations
-function getDsVal() { return document.getElementById('ds-val')?.value; }
+function getDsVal() {
+  return document.getElementById('ds-val')?.value;
+}
+function setStepMsg(msg) {
+  const stepText = document.getElementById('step-text');
+  stepText.textContent = msg;
+  // Remove the special class if the message is not a traversal result
+  if (!msg.includes('traversal: [')) {
+    stepText.classList.remove('traversal-result');
+  }
+  document.getElementById('step-text').textContent = msg;
+  if (isFullscreen) {
+    const bar = document.getElementById('fs-step-info');
+    const num = document.getElementById('step-num')?.textContent || '';
+    if (bar) bar.textContent = num && num !== 'Step 0' ? `${num}  ·  ${msg}` : msg;
+  }
+}
 function getDsIdx() { return parseInt(document.getElementById('ds-idx')?.value); }
 
 function dsPush() {
-  const v = getDsVal(); if(!v) return;
-  dsState.stack.push(v);
-  updateSizeLabel(dsState.stack.length);
-  setStepMsg(`Pushed "${v}" onto stack. Size: ${dsState.stack.length}`);
-  updateComplexity(); drawStack();
+  const v = getDsVal();
+  if (!v) {
+    showErrorToast('Please enter a value.');
+    return;
+  }
+  // Check if it's a number or a single bracket
+  const num = Number(v);
+  const isValidNumber = !isNaN(num) && v.trim() !== '';
+  const isValidBracket = /^[()[\]{}]$/.test(v);
+  if (!isValidNumber && !isValidBracket) {
+    showErrorToast('Invalid input: only numbers or brackets ( ) [ ] { } are allowed.');
+    return;
+  }
+  const storedValue = isValidNumber ? num : v;
+  const oldLen = dsState.stack.length;
+  dsState.stack.push(storedValue);
+  const newLen = dsState.stack.length;
+  updateSizeLabel(newLen);
+  setStepMsg(`Pushed "${storedValue}" onto stack. Size: ${newLen}`);
+  updateComplexity();
+  _animateStack('push', storedValue, oldLen, newLen, null);
+  
+  // Clear the input field
+  const input = document.getElementById('ds-val');
+  if (input) input.value = '';
 }
+
 function dsPop() {
-  if(!dsState.stack.length){setStepMsg('Stack is empty!'); return;}
-  const v=dsState.stack.pop();
-  updateSizeLabel(dsState.stack.length);
-  setStepMsg(`Popped "${v}" from stack.`); updateComplexity(); drawStack();
+  if (!dsState.stack.length) {
+    setStepMsg('Stack is empty!');
+    return;
+  }
+  const oldLen = dsState.stack.length;
+  const v = dsState.stack.pop();
+  const newLen = dsState.stack.length;
+  updateSizeLabel(newLen);
+  setStepMsg(`Popped "${v}" from stack.`);
+  updateComplexity();
+  _animateStack('pop', v, oldLen, newLen, null);
 }
+
+function dsPop() {
+  if (!dsState.stack.length) { setStepMsg('Stack is empty!'); return; }
+  const oldLen = dsState.stack.length;
+  const v = dsState.stack[oldLen - 1]; // top element
+  // Don't pop yet; animate the removal
+  _animateStack('pop', v, oldLen, oldLen - 1, () => {
+    // After animation, actually remove the element
+    dsState.stack.pop();
+    updateSizeLabel(dsState.stack.length);
+    setStepMsg(`Popped "${v}" from stack.`);
+    updateComplexity();
+    drawStack(); // final redraw without the element
+  });
+}
+
 function dsPeek() {
-  if(!dsState.stack.length){setStepMsg('Stack is empty!'); return;}
-  setStepMsg(`Top element: "${dsState.stack[dsState.stack.length-1]}"`); updateComplexity(); drawStack();
+  if (!dsState.stack.length) { setStepMsg('Stack is empty!'); return; }
+  setStepMsg(`Top element: "${dsState.stack[dsState.stack.length-1]}"`);
+  updateComplexity();
+  // Simple glow effect (no need for complex animation)
+  const canvas = document.getElementById('main-canvas');
+  if (canvas) {
+    canvas.classList.add('stack-flash');
+    setTimeout(() => canvas.classList.remove('stack-flash'), 300);
+  }
+  drawStack();
+}
+function animateStackOperation(op, idx) {
+  const canvas = document.getElementById('main-canvas');
+  if (!canvas) return;
+  canvas.classList.add('stack-flash');
+  setTimeout(() => canvas.classList.remove('stack-flash'), 300);
+  // Also redraw the stack to show the updated state
+  drawStack();
 }
 function dsEnqueue() {
-  const v=getDsVal(); if(!v) return;
-  dsState.queue.push(v);
-  updateSizeLabel(dsState.queue.length);
-  setStepMsg(`Enqueued "${v}". Queue size: ${dsState.queue.length}`); updateComplexity(); drawQueue();
+  const v = getDsVal();
+  if (!v) {
+    showErrorToast('Please enter a value.');
+    return;
+  }
+  const num = Number(v);
+  if (isNaN(num)) {
+    showErrorToast('Invalid input: only numbers are allowed.');
+    return;
+  }
+  queueOpQueue.push({ type: 'enqueue', val: num });
+  if (!queueProcessing) processNextQueueOp();
+
+  // Clear the input field
+  const input = document.getElementById('ds-val');
+  if (input) input.value = '';
 }
+
 function dsDequeue() {
-  if(!dsState.queue.length){setStepMsg('Queue is empty!'); return;}
-  const v=dsState.queue.shift();
-  updateSizeLabel(dsState.queue.length);
-  setStepMsg(`Dequeued "${v}".`); updateComplexity(); drawQueue();
+  if (!dsState.queue.length) {
+    setStepMsg('Queue is empty!');
+    return;
+  }
+  queueOpQueue.push({ type: 'dequeue' });
+  if (!queueProcessing) processNextQueueOp();
+}
+
+function processNextQueueOp() {
+  if (queueOpQueue.length === 0) {
+    queueProcessing = false;
+    return;
+  }
+  queueProcessing = true;
+  const op = queueOpQueue.shift();
+
+  if (op.type === 'enqueue') {
+    const v = op.val;
+    const oldLen = dsState.queue.length;
+    dsState.queue.push(v);
+    const newLen = dsState.queue.length;
+    updateSizeLabel(newLen);
+    setStepMsg(`Enqueued "${v}". Queue size: ${newLen}`);
+    updateComplexity();
+    _animateQueue('enqueue', v, oldLen, newLen, () => {
+      processNextQueueOp();
+    });
+  }
+  else if (op.type === 'dequeue') {
+    const oldLen = dsState.queue.length;
+    const v = dsState.queue.shift();
+    const newLen = dsState.queue.length;
+    updateSizeLabel(newLen);
+    setStepMsg(`Dequeued "${v}".`);
+    updateComplexity();
+    _animateQueue('dequeue', v, oldLen, newLen, () => {
+      processNextQueueOp();
+    });
+  }
 }
 function dsPeekQ() {
   if(!dsState.queue.length){setStepMsg('Queue is empty!'); return;}
@@ -7879,32 +7628,180 @@ function llAnimate(opKey, val, pos) {
   startAnimation();
 }
 
-function dsLLInsertBegin() { llAnimate('insertBegin', getDsVal()); updateComplexity(); }
-function dsLLInsertEnd()   { llAnimate('insertEnd',   getDsVal()); updateComplexity(); }
+// ===== Core linked list operations (animated) =====
+function dsLLInsertBegin() {
+  const v = getDsVal();
+  if (!v) { setStepMsg('Enter a value first.'); return; }
+  llAnimate('insertBegin', v);
+  updateComplexity();
+}
+function dsLLInsertEnd() {
+  const v = getDsVal();
+  if (!v) { setStepMsg('Enter a value first.'); return; }
+  llAnimate('insertEnd', v);
+  updateComplexity();
+}
 function dsLLInsertPos() {
   const v = getDsVal();
   if (!v) { setStepMsg('Enter a value first.'); return; }
   const idx = parseInt(document.getElementById('ds-idx')?.value);
   const list = dsState.linkedList;
   if (isNaN(idx) || idx < 0 || idx > list.length) {
-    showInvalidIndexToast();
-    setStepMsg(`Invalid position: ${idx}. Valid range: 0 to ${list.length} (append at ${list.length}).`);
+    showErrorToast(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    setStepMsg(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
     return;
   }
   llAnimate('insertPos', v, idx);
   updateComplexity();
 }
-function dsLLDeleteBegin() { llAnimate('deleteBegin'); updateComplexity(); }
-function dsLLDeleteEnd()   { llAnimate('deleteEnd');   updateComplexity(); }
-function dsLLDeleteVal()   {
+function dsLLDeleteBegin() {
+  llAnimate('deleteBegin');
+  updateComplexity();
+}
+function dsLLDeleteEnd() {
+  llAnimate('deleteEnd');
+  updateComplexity();
+}
+function dsLLDeleteVal() {
   const v = getDsVal();
   if (!v) { setStepMsg('Enter a value to delete.'); return; }
-  llAnimate('deleteByVal', v); updateComplexity();
+  llAnimate('deleteByVal', v);
+  updateComplexity();
 }
-function dsLLReverse()     {
-  dsState.linkedList.reverse();
-  updateSizeLabel(dsState.linkedList.length);
-  setStepMsg('List reversed!'); drawLinkedList(state.algo);
+function fsLLInsertBegin() {
+  const v = document.getElementById('fs-ll-val')?.value;
+  if (!v) { setStepMsg('Enter a value.'); return; }
+  llAnimate('insertBegin', v);
+  updateComplexity();
+}
+function fsLLInsertEnd() {
+  const v = document.getElementById('fs-ll-val')?.value;
+  if (!v) { setStepMsg('Enter a value.'); return; }
+  llAnimate('insertEnd', v);
+  updateComplexity();
+}
+function fsLLInsertPos() {
+  const v = document.getElementById('fs-ll-val')?.value;
+  const idx = parseInt(document.getElementById('fs-ll-idx')?.value);
+  const list = dsState.linkedList;
+  if (!v) { setStepMsg('Enter a value.'); return; }
+  if (isNaN(idx) || idx < 0 || idx > list.length) {
+    showErrorToast(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    setStepMsg(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    return;
+  }
+  llAnimate('insertPos', v, idx);
+  updateComplexity();
+}
+function fsLLDeleteBegin() {
+  llAnimate('deleteBegin');
+  updateComplexity();
+}
+function fsLLDeleteEnd() {
+  llAnimate('deleteEnd');
+  updateComplexity();
+}
+function fsLLDeleteVal() {
+  const v = document.getElementById('fs-ll-val')?.value;
+  if (!v) { setStepMsg('Enter a value to delete.'); return; }
+  llAnimate('deleteByVal', v);
+  updateComplexity();
+}
+// ===== UI helpers for main panel =====
+function showInsertMenu() {
+  document.getElementById('ll-insert-menu').style.display = 'block';
+  document.getElementById('ll-delete-menu').style.display = 'none';
+  document.getElementById('ll-insert-position').style.display = 'none';
+  document.getElementById('ll-insert-val').value = '';
+}
+function showDeleteMenu() {
+  document.getElementById('ll-delete-menu').style.display = 'block';
+  document.getElementById('ll-insert-menu').style.display = 'none';
+  document.getElementById('ll-delete-value').style.display = 'none';
+  document.getElementById('ll-delete-val').value = '';
+}
+function showInsertPosition() {
+  document.getElementById('ll-insert-position').style.display = 'block';
+}
+function showDeleteValue() {
+  document.getElementById('ll-delete-value').style.display = 'block';
+}
+
+// ===== UI helpers for fullscreen =====
+function fsShowInsertMenu() {
+  document.getElementById('fs-ll-insert-menu').style.display = 'flex';
+  document.getElementById('fs-ll-delete-menu').style.display = 'none';
+  document.getElementById('fs-ll-insert-position').style.display = 'none';
+}
+function fsShowDeleteMenu() {
+  document.getElementById('fs-ll-delete-menu').style.display = 'flex';
+  document.getElementById('fs-ll-insert-menu').style.display = 'none';
+  document.getElementById('fs-ll-delete-value').style.display = 'none';
+}
+function fsShowInsertPosition() {
+  document.getElementById('fs-ll-insert-position').style.display = 'flex';
+}
+function fsShowDeleteValue() {
+  document.getElementById('fs-ll-delete-value').style.display = 'flex';
+}
+function fsLLInsertHead() {
+  const val = document.getElementById('fs-ll-insert-val').value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertBegin', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLInsertTail() {
+  const val = document.getElementById('fs-ll-insert-val').value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertEnd', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLInsertPos() {
+  const val = document.getElementById('fs-ll-insert-val').value;
+  const idx = parseInt(document.getElementById('fs-ll-insert-idx').value);
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (isNaN(idx)) { showErrorToast('Invalid index.'); return; }
+  const list = dsState.linkedList;
+  if (idx < 0 || idx > list.length) {
+    showErrorToast(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    return;
+  }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertPos', val, idx);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLDeleteByValue() {
+  const val = document.getElementById('fs-ll-delete-val').value;
+  if (!val) { showErrorToast('Please enter a value to delete.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteByVal', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
 }
 
 // Ordered LL insert (animated)
@@ -7951,70 +7848,166 @@ function dsOrderedSearch() {
   _syncFsHud();
   startAnimation();
 }
+function countBSTNodes(root) {
+  if (!root) return 0;
+  return 1 + countBSTNodes(root.left) + countBSTNodes(root.right);
+}
 function dsBSTInsert() {
-  const v=parseInt(getDsVal()); if(isNaN(v)) return;
-  dsState.bst=bstInsert(dsState.bst,v); setStepMsg(`Inserted ${v} into BST`); drawBST(v); updateComplexity();
+  const v = parseInt(getDsVal());
+  if (isNaN(v)) {
+    showErrorToast('Invalid input: only numbers are allowed.');
+    return;
+  }
+  const currentCount = countBSTNodes(dsState.bst);
+  if (currentCount >= 12) {
+    showErrorToast('Maximum node count (12) reached. Cannot insert more.');
+    setStepMsg('Maximum node count (12) reached.');
+    return;
+  }
+  // If value already exists, we should not insert duplicate.
+  let node = dsState.bst;
+  while (node) {
+    if (node.val === v) {
+      showErrorToast(`Value ${v} already exists in the tree.`);
+      setStepMsg(`Value ${v} already exists.`);
+      return;
+    }
+    node = v < node.val ? node.left : node.right;
+  }
+  // Insert the value
+  const steps = genBSTInsertSteps(dsState.bst, v);
+  _animateBST(steps, () => {
+    dsState.bst = bstInsert(dsState.bst, v);
+    setStepMsg(`Inserted ${v} into BST`);
+    drawBST(v);
+    updateComplexity();
+    updateSizeLabel(countBSTNodes(dsState.bst));
+  });
+  setStepMsg(`Inserting ${v}...`);
 }
 function dsBSTSearch() {
-  const v=parseInt(getDsVal()); if(isNaN(v)) return;
-  let node=dsState.bst, found=false, path=[];
-  while(node){
-    path.push(node.val);
-    if(node.val===v){found=true;break;}
-    node=v<node.val?node.left:node.right;
+  const v = parseInt(getDsVal());
+  if (isNaN(v)) {
+    showErrorToast('Invalid input: only numbers are allowed.');
+    return;
   }
-  setStepMsg(found?`✅ Found ${v} in BST! Path: ${path.join(' → ')}`:`❌ ${v} not in BST. Searched: ${path.join(' → ')}`);
-  drawBST(found?v:null); updateComplexity();
+  if (!dsState.bst) {
+    setStepMsg('Tree is empty.');
+    return;
+  }
+
+  const steps = genBSTSearchSteps(dsState.bst, v);
+  _animateBST(steps, () => {
+  const last = steps[steps.length - 1];
+  const stepText = document.getElementById('step-text');
+  if (last.current !== null && last.msg.includes('Found')) {
+    stepText.textContent = `✅ Found ${v}! Path: ${last.visited.join(' → ')}`;
+    stepText.classList.add('traversal-result');
+  } else {
+    stepText.textContent = `❌ ${v} not found. Searched: ${last.visited.join(' → ')}`;
+    stepText.classList.add('traversal-result');
+  }
+  const stepNum = document.getElementById('step-num');
+  stepNum.textContent = `Step ${steps.length}/${steps.length}`;
+});
+  setStepMsg(`Searching for ${v}...`);
 }
 function dsBSTDelete() {
-  const v=parseInt(getDsVal()); if(isNaN(v)) return;
-  function del(node,val){
-    if(!node) return null;
-    if(val<node.val) { node.left=del(node.left,val); return node; }
-    if(val>node.val) { node.right=del(node.right,val); return node; }
-    // Found — delete by copying (inorder successor)
-    if(!node.left) return node.right;
-    if(!node.right) return node.left;
-    let succ=node.right; while(succ.left) succ=succ.left;
-    node.val=succ.val; node.right=del(node.right,succ.val);
-    return node;
+  const v = parseInt(getDsVal());
+  if (isNaN(v)) {
+    showErrorToast('Invalid input: only numbers are allowed.');
+    return;
   }
-  const before = dsState.bst ? 'found' : 'not found';
-  dsState.bst=del(dsState.bst,v);
-  setStepMsg(`Deleted ${v} from BST (successor method).`); drawBST(); updateComplexity();
+  if (!dsState.bst) {
+    setStepMsg('Tree is empty.');
+    return;
+  }
+
+  const { steps, found } = genBSTDeleteSteps(dsState.bst, v);
+  _animateBST(steps, () => {
+    const last = steps[steps.length - 1];
+    const stepText = document.getElementById('step-text');
+    if (found) {
+      // Actually delete the node after animation
+      function del(node, val) {
+        if (!node) return null;
+        if (val < node.val) { node.left = del(node.left, val); return node; }
+        if (val > node.val) { node.right = del(node.right, val); return node; }
+        // found
+        if (!node.left) return node.right;
+        if (!node.right) return node.left;
+        let succ = node.right;
+        while (succ.left) succ = succ.left;
+        node.val = succ.val;
+        node.right = del(node.right, succ.val);
+        return node;
+      }
+      dsState.bst = del(dsState.bst, v);
+      const msg = `Deleted ${v} from BST.`;
+      stepText.textContent = msg;
+      stepText.classList.add('traversal-result');
+      setStepMsg(msg); // also sets the message and removes class? We'll keep the class.
+    } else {
+      const msg = `❌ ${v} not found in tree.`;
+      stepText.textContent = msg;
+      stepText.classList.remove('traversal-result'); // not a success result
+      setStepMsg(msg);
+    }
+    updateComplexity();
+    drawBST();
+  });
+  setStepMsg(`Deleting ${v}...`);
 }
 function dsBSTInorder() {
-  const result=[];
-  function inorder(n){if(!n)return; inorder(n.left); result.push(n.val); inorder(n.right);}
-  inorder(dsState.bst);
-  setStepMsg(`Inorder (sorted): [${result.join(' → ')}]`); updateComplexity();
-  if (state.algo==='bst'||state.algo==='binary-tree') drawBST(null, result);
+  if (!dsState.bst) { setStepMsg('Tree is empty.'); return; }
+  const steps = genBSTInorderSteps(dsState.bst);
+  _animateBST(steps, () => {
+  const last = steps[steps.length - 1];
+  const msg = `Inorder traversal: [${last.visited.join(' → ')}]`;
+  setStepMsg(msg);
+  // Add class for styling
+  const stepText = document.getElementById('step-text');
+  stepText.classList.add('traversal-result');
+});
+  setStepMsg('Starting inorder traversal...');
 }
 function dsBSTPreorder() {
-  const result=[];
-  function pre(n){if(!n)return; result.push(n.val); pre(n.left); pre(n.right);}
-  pre(dsState.bst);
-  setStepMsg(`Preorder: [${result.join(' → ')}]`); updateComplexity();
-  if (state.algo==='bst'||state.algo==='binary-tree') drawBST(null, result);
+  if (!dsState.bst) { setStepMsg('Tree is empty.'); return; }
+  const steps = genBSTPreorderSteps(dsState.bst);
+  _animateBST(steps, () => {
+    const last = steps[steps.length - 1];
+    const msg = `Preorder traversal: [${last.visited.join(' → ')}]`;
+    const stepText = document.getElementById('step-text');
+    stepText.textContent = msg;
+    stepText.classList.add('traversal-result');
+    const stepNum = document.getElementById('step-num');
+    stepNum.textContent = `Step ${steps.length}/${steps.length}`;
+  });
+  setStepMsg('Starting preorder traversal...');
 }
+
 function dsBSTPostorder() {
-  const result=[];
-  function post(n){if(!n)return; post(n.left); post(n.right); result.push(n.val);}
-  post(dsState.bst);
-  setStepMsg(`Postorder: [${result.join(' → ')}]`); updateComplexity();
-  if (state.algo==='bst'||state.algo==='binary-tree') drawBST(null, result);
+  if (!dsState.bst) { setStepMsg('Tree is empty.'); return; }
+  const steps = genBSTPostorderSteps(dsState.bst);
+  _animateBST(steps, () => {
+  const last = steps[steps.length - 1];
+  const msg = `Inorder traversal: [${last.visited.join(' → ')}]`;
+  setStepMsg(msg);
+  // Add class for styling
+  const stepText = document.getElementById('step-text');
+  stepText.classList.add('traversal-result');
+});
+  setStepMsg('Starting postorder traversal...');
 }
+
 function dsBSTBFS() {
-  if(!dsState.bst){setStepMsg('BST is empty!');return;}
-  const q=[dsState.bst], levels=[], allVals=[];
-  while(q.length){
-    const sz=q.length, row=[];
-    for(let i=0;i<sz;i++){const n=q.shift(); row.push(n.val); allVals.push(n.val); if(n.left)q.push(n.left); if(n.right)q.push(n.right);}
-    levels.push(row);
-  }
-  setStepMsg(`BFS level-order: ${levels.map((l,i)=>`L${i}:[${l.join(',')}]`).join(' | ')}`);
-  updateComplexity();
-  if (state.algo==='bst'||state.algo==='binary-tree') drawBST(null, allVals);
+  if (!dsState.bst) { setStepMsg('Tree is empty.'); return; }
+  const steps = genBSTBFSSteps(dsState.bst);
+  _animateBST(steps, () => {
+    const last = steps[steps.length - 1];
+    setStepMsg(`Level‑order traversal: [${last.visited.join(' → ')}]`);
+  });
+  setStepMsg('Starting level‑order traversal...');
 }
 
 // ── AVL Tree Operations ──
@@ -8112,6 +8105,12 @@ function renderCurrentDS() {
 }
 
 function setStepMsg(msg) {
+  const stepText = document.getElementById('step-text');
+  stepText.textContent = msg;
+  // Remove the special class if the message is not a traversal result
+  if (!msg.includes('traversal: [')) {
+    stepText.classList.remove('traversal-result');
+  }
   document.getElementById('step-text').textContent = msg;
   // Mirror into fullscreen step-info bar when active
   if (isFullscreen) {
@@ -8137,6 +8136,29 @@ function showInvalidIndexToast() {
 // LOAD ALGORITHM
 // =====================================================
 function loadAlgo(name) {
+  // --- Stop running animations ---
+  state.running = false;
+  state.paused = false;
+  if (state.animTimer) {
+    clearTimeout(state.animTimer);
+    state.animTimer = null;
+  }
+  
+  // --- Safely reset buttons WITHOUT breaking their native HTML onclick ---
+  const bStart = document.getElementById('btn-start');
+  if (bStart) {
+    bStart.style.display = '';
+    bStart.disabled = false;
+    // We intentionally do NOT set bStart.onclick here so your app's native logic works!
+  }
+  const bPause = document.getElementById('btn-pause');
+  if (bPause) {
+    bPause.style.display = ''; 
+    bPause.disabled = true;
+    bPause.textContent = '⏸ Pause';
+  }
+  // ------------------------------------------------------------------------
+
   ctrlReset();
   state.algo = name;
   state.stepIdx = -1;
@@ -8145,191 +8167,194 @@ function loadAlgo(name) {
   state.swaps = 0;
 
   document.getElementById('algo-title').textContent = algoNames[name] || name;
-  // Update dsState.type so all operations know which structure is active
   dsState.type = name;
-  updateSizeLabel();   // refresh the label text for the newly-selected structure
+  updateSizeLabel();
   updateComplexity();
   renderCode();
   updateDsOps();
-  const isSortingOrSearching = ['bubble','selection','insertion','merge','quick','heap','counting','radix',
-  'linear-search','binary-search','jump-search'].includes(name);
-adjustControlPanelForDS(!isSortingOrSearching);
 
-  // ── Fix 1: clear custom input on every algo switch ──
-  document.getElementById('custom-input').value = '';
+  const isSorting = ['bubble','selection','insertion','merge','quick','heap','counting','radix'].includes(name);
+  const isSearching = ['linear-search','binary-search','jump-search'].includes(name);
+  const isDS = ['array-ds','stack-ds','queue-ds','singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name);
+  const isTree = ['bst','avl','heap-tree','binary-tree'].includes(name);
+  const isGraph = ['bfs','dfs','dijkstra'].includes(name);
+  const isSortingOrSearching = isSorting || isSearching;
 
-  // ── Fix 7: structure-specific Random button label ──
-  const randomLabels = {
-    'array-ds':'🎲 Random Array', 'stack-ds':'🎲 Random Stack',
-    'queue-ds':'🎲 Random Queue', 'singly-ll':'🎲 Random List',
-    'doubly-ll':'🎲 Random List', 'circular-ll':'🎲 Random List',
-    'ordered-ll':'🎲 Random List',
-    'bst':'🎲 Random Tree', 'avl':'🎲 Random Tree',
-    'heap-tree':'🎲 Random Tree', 'binary-tree':'🎲 Random Tree',
-    'bfs':'🎲 Random Graph', 'dfs':'🎲 Random Graph', 'dijkstra':'🎲 Random Graph',
-  };
-  document.querySelector('[onclick="generateRandom()"]').textContent =
-    randomLabels[name] || '🎲 Random Array';
+  let maxSize = 20;
+  let defaultSize = isSortingOrSearching ? 15 : 5;
 
-  // Set active nav child
+  if (name === 'merge') maxSize = 16;
+  else if (name === 'counting') maxSize = 20;
+  else if (isTree || isGraph) maxSize = 12;
+
+  const sizeRange = document.getElementById('size-range');
+  const sizeVal = document.getElementById('size-val');
+  const statSize = document.getElementById('stat-size');
+  if (sizeRange) {
+    sizeRange.max = maxSize;
+    let newSize = defaultSize;
+    if (newSize > maxSize) newSize = maxSize;
+    state.size = newSize;
+    sizeRange.value = newSize;
+    if (sizeVal) sizeVal.textContent = newSize;
+    if (statSize) statSize.textContent = newSize;
+
+    sizeRange.style.display = 'none';
+    sizeRange.offsetHeight;
+    sizeRange.style.display = '';
+    
+    if (typeof updateSliderBackground === 'function') updateSliderBackground();
+  }
+
   document.querySelectorAll('.nav-child').forEach(el => {
     el.classList.toggle('active', el.getAttribute('onclick')?.includes(`'${name}'`));
   });
 
-  // Determine viz type
-  const isSorting  = ['bubble','selection','insertion','merge','quick','heap','counting','radix'].includes(name);
-  const isSearching = ['linear-search','binary-search','jump-search'].includes(name);
-  const isDS   = ['array-ds','stack-ds','queue-ds','singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name);
-  const isTree = ['bst','avl','heap-tree','binary-tree'].includes(name);
-  const isGraph = ['bfs','dfs','dijkstra'].includes(name);
-  // Determine if this is a DS/tree/graph (i.e., not sorting/searching)
-  // Show/hide adjacency toggle button (floating, non-intrusive)
-  showGraphControls(isGraph);
+  if (typeof showGraphControls === 'function') showGraphControls(isGraph);
 
-  // Explain button: visible only for sorting/searching (not raw DS structures)
   const explainBtn = document.getElementById('explain-btn');
   if (explainBtn) {
-    const isDS = ['array-ds','stack-ds','queue-ds','singly-ll','doubly-ll',
-      'circular-ll','ordered-ll','bst','avl','heap-tree','binary-tree'].includes(name);
-    const hasExplain = !isDS && !!algoExplanations[name];
-    explainBtn.style.display  = isDS ? 'none' : '';
+    const isPureDS = isDS || isTree;
+    const hasExplain = !isPureDS && typeof algoExplanations !== 'undefined' && !!algoExplanations[name];
+    explainBtn.style.display = isPureDS ? 'none' : '';
     explainBtn.disabled = !hasExplain;
     explainBtn.style.opacity = hasExplain ? '1' : '0.4';
     explainBtn.title = hasExplain ? 'How this algorithm works' : 'No explanation for this view';
   }
 
-  // Show/hide search target for searching
   if (isSearching) {
     state.searchTarget = Math.floor(Math.random() * 80) + 10;
-    setStepMsg(`Search target: ${state.searchTarget}. Press Start to visualize.`);
+    if (typeof setStepMsg === 'function') setStepMsg(`Search target: ${state.searchTarget}. Press Start to visualize.`);
   }
 
-  if (isSorting || isSearching) {
-    _autoSetSortView(name);   // set bars vs cells based on space complexity
-
-    // Show/hide the fullscreen hint label in the stats bar
-    const fsHint = document.getElementById('fs-hint');
-    if (fsHint) fsHint.style.display = (name === 'merge' || name === 'counting' || name === 'quick' ||
-      ['singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name)) ? '' : 'none';
-
-    // Clamp size for algorithms that need constrained display
-    if (name === 'merge') {
-      // Cap at 16 and push slider all the way to max (16)
-      state.size = 16;
-      const sr = document.getElementById('size-range');
-      if (sr) { sr.max = '16'; sr.value = 16; }
-      document.getElementById('size-val').textContent = 16;
-      document.getElementById('stat-size').textContent = 16;
-      // Set speed to 2 (slow) so the tree animation is readable
-      state.speed = 2;
-      const speedR = document.getElementById('speed-range');
-      const speedV = document.getElementById('speed-val');
-      if (speedR) speedR.value = 2;
-      if (speedV) speedV.textContent = 2;
+  if (typeof adjustControlPanelForDS === 'function') {
+    adjustControlPanelForDS(!isSortingOrSearching);
+  } else {
+    const controlsGroup = document.getElementById('ctrl-group-controls');
+    const speedGroup = document.getElementById('ctrl-group-speed');
+    if (!isSortingOrSearching) {
+      if (controlsGroup) controlsGroup.style.display = 'none';
+      if (speedGroup) speedGroup.style.display = 'none';
     } else {
-      // Restore size slider max for all other algos
-      const sr = document.getElementById('size-range');
-      if (sr && sr.max !== '20') sr.max = '20';
-      // Clamp counting sort
-      if (name === 'counting' && state.size > 20) {
-        state.size = 20;
-        if (sr) sr.value = 20;
-        document.getElementById('size-val').textContent = 20;
-        document.getElementById('stat-size').textContent = 20;
-      }
+      if (controlsGroup) controlsGroup.style.display = '';
+      if (speedGroup) speedGroup.style.display = '';
+    }
+  }
+
+  const randomBtn = document.querySelector('[onclick="generateRandom()"]');
+  if (randomBtn) {
+    let label = '🎲 Random ';
+    if (isSortingOrSearching) label += 'Array';
+    else if (name === 'array-ds') label += 'Array';
+    else if (name === 'stack-ds') label += 'Stack';
+    else if (name === 'queue-ds') label += 'Queue';
+    else if (['singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name)) label += 'List';
+    else if (isTree) label += 'Tree';
+    else if (isGraph) label += 'Graph';
+    else label += 'Array';
+    randomBtn.textContent = label;
+  }
+
+  const infoBtn = document.getElementById('info-btn');
+  if (infoBtn) {
+    const isDataStructure = isDS || isTree || isGraph;
+    infoBtn.style.display = isDataStructure ? '' : 'none';
+  }
+
+  const legendDiv = document.getElementById('legend');
+  if (legendDiv) {
+    const showLegend = (isSorting && !['merge','quick','counting','radix'].includes(name)) || isSearching;
+    legendDiv.style.display = showLegend ? '' : 'none';
+  }
+
+  if (isSortingOrSearching) {
+    if (typeof _autoSetSortView === 'function') _autoSetSortView(name);
+
+    const fsHint = document.getElementById('fs-hint');
+    if (fsHint) {
+      fsHint.style.display = (['merge','counting','quick','radix'].includes(name) ||
+        ['singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name)) ? '' : 'none';
+    }
+
+    if (name === 'merge' && state.size > 16) {
+      state.size = 16;
+      if (sizeRange) sizeRange.value = 16;
+      if (sizeVal) sizeVal.textContent = 16;
+      if (statSize) statSize.textContent = 16;
+    }
+    if (name === 'counting' && state.size > 20) {
+      state.size = 20;
+      if (sizeRange) sizeRange.value = 20;
+      if (sizeVal) sizeVal.textContent = 20;
+      if (statSize) statSize.textContent = 20;
     }
 
     generateRandom();
 
-    // Draw initial state using the proper visualizer — same as what the user sees after Start.
-    // Generate steps and show step 0 so the canvas looks "live" from the start.
-    if (name === 'merge' || name === 'counting' || name === 'quick') {
-      // These algos have special renderers — show first real step immediately
-      state.steps = generateSteps();
-      if (state.steps.length > 0) {
+    if (name === 'merge' || name === 'counting' || name === 'quick' || name === 'radix') {
+      
+      if (name === 'radix') {
+        state.steps = typeof genRadixSteps === 'function' ? genRadixSteps([...state.array]) : [];
+      } else if (typeof generateSteps === 'function') {
+        state.steps = generateSteps();
+      }
+
+      if (state.steps && state.steps.length > 0) {
         state.stepIdx = 0;
         const s0 = state.steps[0];
-        document.getElementById('step-num').textContent  = `Step 1/${state.steps.length}`;
-        document.getElementById('step-text').textContent = s0.msg || '';
-        if (s0.mergeTree)       drawMergeTree(s0);
-        else if (s0.quickPartition) drawQuickPartition(s0);
-        else if (s0.multiArray) drawMultiArray(s0);
-        else                    drawStep(0);
-        // Reset stepIdx so Play starts from beginning
+        const stepNumEl = document.getElementById('step-num');
+        const stepTextEl = document.getElementById('step-text');
+        
+        if (stepNumEl) stepNumEl.textContent = `Step 1/${state.steps.length}`;
+        if (stepTextEl) stepTextEl.textContent = s0.msg || s0.label || '';
+        
+        if (s0.mergeTree && typeof drawMergeTree === 'function') drawMergeTree(s0);
+        else if (s0.quickPartition && typeof drawQuickPartition === 'function') drawQuickPartition(s0);
+        else if (s0.multiArray && typeof drawMultiArray === 'function') drawMultiArray(s0);
+        else if ((s0.radixStep || name === 'radix') && typeof drawRadixStep === 'function') drawRadixStep(s0);
+        else drawStep(0);
+        
         state.stepIdx = -1;
       }
     } else {
       drawStep(-1);
     }
-  } else if (isDS) {
-    dsState.array = []; dsState.stack = []; dsState.queue = [];
-    dsState.linkedList = []; dsState.bst = null;
-    if (name === 'array-ds') { dsState.array = [12,7,25,4,18,31,9]; updateSizeLabel(dsState.array.length); }
-    else if (name === 'stack-ds') { dsState.stack = [2,4,7]; updateSizeLabel(dsState.stack.length); }
-    else if (name === 'queue-ds') { dsState.queue = [5,7,3]; updateSizeLabel(dsState.queue.length); }
-    else if (['singly-ll','doubly-ll','circular-ll'].includes(name)) { dsState.linkedList=[10,25,7,42,15]; updateSizeLabel(5); }
-    else if (name === 'ordered-ll') { dsState.linkedList=[3,8,15,22,31]; updateSizeLabel(5); }
-    renderCurrentDS();
-    setStepMsg('Use the operation buttons to interact with this data structure.');
-  } else if (isTree) {
-    dsState.bst = null; dsState.avl = null; heapState.arr = [];
-    if (name === 'bst') {
-      [50,30,70,20,40,60,80].forEach(v=>{dsState.bst=bstInsert(dsState.bst,v);});
-      drawBST();
-      setStepMsg('BST loaded. Use Insert / Search / Delete / Traversals to explore.');
-    } else if (name === 'avl') {
-      const log=[];
-      [50,30,70,20,40,60,80].forEach(v=>{ dsState.avl=avlInsert(dsState.avl||null,v,log); });
-      drawGenericTree(dsState.avl,[],null,true,true,'AVL TREE');
-      setStepMsg('AVL tree loaded. bf = balance factor. Green = balanced, Red = unbalanced.');
-    } else if (name === 'heap-tree') {
-      const log=[];
-      [40,20,60,10,30,50,70].forEach(v=>heapInsert(v,log));
-      drawHeapTree(heapState.arr,-1,'Max-heap: every parent ≥ its children');
-      setStepMsg('Max-heap loaded. Root = maximum element. Use Insert / Extract Max to explore.');
-    } else {
-      renderCurrentDS();
-      setStepMsg('Use the operation buttons to interact.');
+
+    if (bStart) bStart.style.display = '';
+    if (bPause) {
+      bPause.disabled = !state.running;
+      bPause.textContent = state.paused ? '▶ Resume' : '⏸ Pause';
     }
-    updateSizeLabel(name==='heap-tree' ? heapState.arr.length : (name==='bst'||name==='avl') ? 7 : 0);
-  } else if (isGraph) {
-    // Auto-generate a graph on first visit; keep existing graph on revisit
-    if (gNodes.length === 0) generateRandomGraph(7);
-    else { drawGraph(); renderAdjacencyPanel(); }
-    setStepMsg(`Graph ready. Press 🎲 Random Graph for a new graph, then Run ${name.toUpperCase()}.`);
+  } else if (isDS || isTree || isGraph) {
+    generateRandom(); 
+    if (typeof renderCurrentDS === 'function') renderCurrentDS();
+    if (isGraph && typeof setStepMsg === 'function') setStepMsg(`Graph ready. Press 🎲 Random Graph for a new graph, then Run ${name.toUpperCase()}.`);
+    else if (typeof setStepMsg === 'function') setStepMsg('Use the operation buttons to interact with this data structure.');
   }
 
-  // Placeholder text for custom input
   const customInput = document.getElementById('custom-input');
-  if (isSearching) customInput.placeholder = `Search target (currently: ${state.searchTarget})`;
-  else if (isGraph) customInput.placeholder = 'Enter node count (e.g. 8)';
-  else customInput.placeholder = 'e.g. 5,3,8,1,9';
-
-  // Hide the fullscreen hint for non-merge/counting algorithms, but show for LL
-  if (!isSorting && !isSearching) {
-    const fsHint = document.getElementById('fs-hint');
-    const isLLHint = ['singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name);
-    if (fsHint) fsHint.style.display = isLLHint ? '' : 'none';
-    // Restore size slider max if it was capped for merge
-    const sr = document.getElementById('size-range');
-    if (sr && sr.max !== '60') sr.max = '60';
+  if (customInput) {
+    if (isSearching) {
+      customInput.placeholder = `Search target (currently: ${state.searchTarget})`;
+    } else if (isGraph) {
+      customInput.placeholder = 'Enter node count (e.g. 8)';
+    } else {
+      customInput.placeholder = 'e.g. 5,3,8,1,9';
+    }
+    customInput.value = ''; 
   }
 
-  // ── Show/hide Start button based on algo type ──
-  // For LL: ops auto-trigger animation — no "Start" needed. Show only Pause.
   const isLLAlgo = ['singly-ll','doubly-ll','circular-ll','ordered-ll'].includes(name);
-  const btnStart  = document.getElementById('btn-start');
-  const btnPause  = document.getElementById('btn-pause');
-  if (btnStart) btnStart.style.display = isLLAlgo ? 'none' : '';
-  if (btnPause && isLLAlgo) {
-    btnPause.disabled = true;
-    btnPause.textContent = '⏸ Pause';
+  if (bStart && isLLAlgo) bStart.style.display = 'none';
+  if (bPause && isLLAlgo) {
+    bPause.disabled = true;
+    bPause.textContent = '⏸ Pause';
   }
-  // Show LL ops in HUD via _syncFsHud
-  _syncFsHud();
 
-  // Close mobile sidebar
-  document.getElementById('sidebar').classList.remove('open');
+  if (typeof _syncFsHud === 'function') _syncFsHud();
+
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('open');
 }
 
 // =====================================================
@@ -8428,18 +8453,26 @@ function generateRandom() {
     return;
   }
 
-  // ── BST: generate exactly n unique values ──
-  if (state.algo === 'bst') {
-    dsState.bst = null;
-    const count = Math.min(n, 15);
-    const set = new Set();
-    while (set.size < count) set.add(Math.floor(Math.random()*80)+10);
-    [...set].forEach(v => { dsState.bst = bstInsert(dsState.bst, v); });
-    updateSizeLabel(set.size);
-    setStepMsg(`Random BST with ${set.size} nodes generated.`);
-    drawBST();
-    return;
+if (state.algo === 'bst') {
+  dsState.bst = null;
+  const maxNodes = 12;
+  const count = Math.min(state.size, maxNodes);
+  const set = new Set();
+  const insertedValues = [];
+  while (set.size < count) {
+    const val = Math.floor(Math.random() * 80) + 10;
+    if (!set.has(val)) {
+      set.add(val);
+      insertedValues.push(val);
+    }
   }
+  insertedValues.forEach(v => { dsState.bst = bstInsert(dsState.bst, v); });
+  updateSizeLabel(set.size);
+  setStepMsg(`Random BST with ${set.size} nodes generated: ${insertedValues.join(', ')}`);
+  document.getElementById('step-num').textContent = `Step 1/1`;
+  drawBST();
+  return;
+}
 
   // ── AVL Tree ──
   if (state.algo === 'avl') {
@@ -8565,6 +8598,186 @@ function fsLLInsertPos() {
 function fsLLDeleteBegin() { llAnimate('deleteBegin'); updateComplexity(); }
 function fsLLDeleteEnd()   { llAnimate('deleteEnd');   updateComplexity(); }
 function fsLLDeleteVal()   { const v=_getFsLLVal(); if(!v){setStepMsg('Enter a value.');return;} llAnimate('deleteByVal',v); updateComplexity(); }
+// ===== Fullscreen UI helpers for linked list =====
+// ===== Fullscreen UI helpers for linked list =====
+
+// ===== Fullscreen UI helpers for linked list =====
+// ===== Fullscreen helpers =====
+function fsShowInsertMenu() {
+  const insertMenu = document.getElementById('fs-ll-insert-menu');
+  const deleteMenu = document.getElementById('fs-ll-delete-menu');
+  const posDiv = document.getElementById('fs-ll-insert-position');
+  if (insertMenu) insertMenu.style.display = 'flex';
+  if (deleteMenu) deleteMenu.style.display = 'none';
+  if (posDiv) posDiv.style.display = 'none';
+}
+function fsShowDeleteMenu() {
+  const deleteMenu = document.getElementById('fs-ll-delete-menu');
+  const insertMenu = document.getElementById('fs-ll-insert-menu');
+  const delValDiv = document.getElementById('fs-ll-delete-value');
+  if (deleteMenu) deleteMenu.style.display = 'flex';
+  if (insertMenu) insertMenu.style.display = 'none';
+  if (delValDiv) delValDiv.style.display = 'none';
+}
+function fsShowInsertPosition() {
+  const posDiv = document.getElementById('fs-ll-insert-position');
+  if (posDiv) posDiv.style.display = 'flex';
+}
+function fsShowDeleteValue() {
+  const delValDiv = document.getElementById('fs-ll-delete-value');
+  if (delValDiv) delValDiv.style.display = 'flex';
+}
+function fsLLInsertHead() {
+  const valInput = document.getElementById('fs-ll-insert-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertBegin', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLInsertTail() {
+  const valInput = document.getElementById('fs-ll-insert-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertEnd', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLInsertPos() {
+  const valInput = document.getElementById('fs-ll-insert-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  const idxInput = document.getElementById('fs-ll-insert-idx');
+  if (!idxInput) return;
+  const idx = parseInt(idxInput.value);
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (isNaN(idx)) { showErrorToast('Invalid index.'); return; }
+  const list = dsState.linkedList;
+  if (idx < 0 || idx > list.length) {
+    showErrorToast(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    return;
+  }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertPos', val, idx);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLDeleteHead() {
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteBegin');
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLDeleteTail() {
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteEnd');
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function fsLLDeleteByValue() {
+  const valInput = document.getElementById('fs-ll-delete-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  if (!val) { showErrorToast('Please enter a value to delete.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteByVal', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+// Fullscreen HUD functions for Stack
+function fsStackPush() {
+  const val = document.getElementById('fs-stack-val')?.value;
+  if (!val) {
+    showErrorToast('Please enter a value.');
+    return;
+  }
+  const num = Number(val);
+  if (isNaN(num)) {
+    showErrorToast('Invalid input: only numbers are allowed.');
+    return;
+  }
+  const storedValue = num;
+  // Sync to main input for consistency
+  const mainVal = document.getElementById('ds-val');
+  if (mainVal) mainVal.value = storedValue;
+  dsPush(); // dsPush already clears the main input
+  
+  // Clear the fullscreen input field
+  const fsInput = document.getElementById('fs-stack-val');
+  if (fsInput) fsInput.value = '';
+}
+
+function fsStackPop() {
+  dsPop();
+}
+
+function fsStackPop() {
+  dsPop();
+}
+
+function fsStackPeek() {
+  dsPeek();
+}
+// Fullscreen HUD functions for Queue
+function fsQueueEnqueue() {
+  const val = document.getElementById('fs-queue-val')?.value;
+  if (!val) {
+    showErrorToast('Please enter a value.');
+    return;
+  }
+  const num = Number(val);
+  if (isNaN(num)) {
+    showErrorToast('Invalid input: only numbers are allowed.');
+    return;
+  }
+  const mainVal = document.getElementById('ds-val');
+  if (mainVal) mainVal.value = num;
+  dsEnqueue(); // dsEnqueue already clears the main input
+
+  // Clear the fullscreen input field
+  const fsInput = document.getElementById('fs-queue-val');
+  if (fsInput) fsInput.value = '';
+}
+
+function fsQueueDequeue() {
+  dsDequeue();
+}
+
+function fsQueuePeek() {
+  if (!dsState.queue.length) { setStepMsg('Queue is empty!'); return; }
+  setStepMsg(`Front element: "${dsState.queue[0]}"`);
+  updateComplexity();
+}
 // Fullscreen HUD functions for Ordered Linked List
 function fsOrderedInsert() {
   const v = document.getElementById('fs-ll-val')?.value;
@@ -8592,8 +8805,13 @@ function fsOrderedSearch() {
 }
 // =====================================================
 // ANIMATION CONTROLS
-// =====================================================
 function ctrlStart() {
+  // Cancel any lingering timer
+  if (state.animTimer) {
+    clearTimeout(state.animTimer);
+    state.animTimer = null;
+  }
+
   if (state.running && !state.paused) return;
 
   const isSorting   = ['bubble','selection','insertion','merge','quick','heap','counting','radix'].includes(state.algo);
@@ -8603,17 +8821,15 @@ function ctrlStart() {
   // ── Search guard: ensure state.array is populated and target exists in it ──
   if (isSearching) {
     if (!state.array || state.array.length === 0) generateRandom();
-    // Convert array values to numbers for comparison (values come from random number generator)
     const numArr = state.array.map(Number);
     if (!numArr.includes(Number(state.searchTarget))) {
-      // Pick a guaranteed-present element as target
       state.searchTarget = numArr[Math.floor(Math.random() * numArr.length)];
       document.getElementById('custom-input').placeholder = `Search target (currently: ${state.searchTarget})`;
       setStepMsg(`Target updated to ${state.searchTarget} (guaranteed in array). Press Start again.`);
-      state.steps = []; // force re-generation with new target
+      state.steps = [];
       return;
     }
-    state.steps = []; // always regenerate search steps with current array+target
+    state.steps = [];
   }
 
   if (state.steps.length === 0) {
@@ -8625,8 +8841,10 @@ function ctrlStart() {
 
   state.running = true;
   state.paused = false;
-  document.getElementById('btn-start').disabled = true;
-  document.getElementById('btn-pause').disabled = false;
+  const startBtn = document.getElementById('btn-start');
+  const pauseBtn = document.getElementById('btn-pause');
+  if (startBtn) startBtn.disabled = true;
+  if (pauseBtn) pauseBtn.disabled = false;
   _syncFsHud();
   startAnimation();
 }
@@ -8634,8 +8852,18 @@ function ctrlStart() {
 function startAnimation() {
   if (state.animTimer) clearTimeout(state.animTimer);
   state.animTimer = null;
-  _animReset(); // clear any lingering animations
-  _mtAnimReset(); // clear merge tree animations
+  _animReset();
+  _mtAnimReset();
+
+  // Force Generate Radix Steps
+  if (state.algo === 'radix') {
+    if (typeof genRadixSteps === 'function') {
+      state.steps = genRadixSteps(state.array);
+    }
+    if (state.stepIdx >= state.steps.length - 1) {
+      state.stepIdx = -1;
+    }
+  }
 
   function tick() {
     if (!state.running) { _animReset(); _mtAnimReset(); return; }
@@ -8643,15 +8871,27 @@ function startAnimation() {
       state.animTimer = setTimeout(tick, 80);
       return;
     }
-    if (state.stepIdx >= state.steps.length - 1) {
+    
+    // --- End of Animation Block ---
+    if (state.steps.length === 0 || state.stepIdx >= state.steps.length - 1) {
       state.running = false;
       state.animTimer = null;
       _animReset();
       _mtAnimReset();
-      document.getElementById('btn-start').disabled = false;
-      document.getElementById('btn-pause').disabled = true;
-      _syncFsHud();
-      if (['bfs','dfs','dijkstra'].includes(state.algo)) setStepMsg('Algorithm complete!');
+      
+      // Ensure Start button is brought back and Pause is disabled
+      const btnStart = document.getElementById('btn-start');
+      const btnPause = document.getElementById('btn-pause');
+      if (btnStart) {
+        btnStart.style.display = ''; 
+        btnStart.disabled = false;
+      }
+      if (btnPause) {
+        btnPause.disabled = true;
+      }
+      
+      if (typeof _syncFsHud === 'function') _syncFsHud();
+      if (['bfs','dfs','dijkstra'].includes(state.algo) && typeof setStepMsg === 'function') setStepMsg('Algorithm complete!');
       if (state._llPostSteps) { state._llPostSteps(); state._llPostSteps = null; }
       return;
     }
@@ -8659,127 +8899,184 @@ function startAnimation() {
     state.stepIdx++;
     const step = state.steps[state.stepIdx];
 
-    // ── Merge-tree steps — ANIMATED ──
+    // Merge Sort
     if (step && step.mergeTree) {
-      document.getElementById('step-text').textContent = step.msg || '';
-      document.getElementById('step-num').textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
-      document.getElementById('stat-stp').textContent = state.stepIdx + 1;
-      if (isFullscreen) {
+      const stepText = document.getElementById('step-text');
+      const stepNum = document.getElementById('step-num');
+      const statStp = document.getElementById('stat-stp');
+      
+      if (stepText) stepText.textContent = step.msg || '';
+      if (stepNum) stepNum.textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
+      if (statStp) statStp.textContent = state.stepIdx + 1;
+      
+      if (typeof isFullscreen !== 'undefined' && isFullscreen) {
         const bar = document.getElementById('fs-step-info');
         if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
       }
-      // Get previous step for diff-based animation
       const prevStep = state.stepIdx > 0 ? state.steps[state.stepIdx - 1] : null;
       const hasPrevMerge = prevStep && prevStep.mergeTree;
-
-      _animateMergeTreeStep(state.stepIdx, hasPrevMerge ? prevStep : null, () => {
-        if (!state.running || state.paused) return;
-        const settle = Math.max(140, 500 - state.speed * 36);
-        state.animTimer = setTimeout(tick, settle);
-      });
-      return; // animation callback will schedule next tick
-    }
-    // ── Quick Sort partition steps ──
-    else if (step && step.quickPartition) {
-      drawQuickPartition(step);
-      document.getElementById('step-text').textContent = step.msg || '';
-      document.getElementById('step-num').textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
-      document.getElementById('stat-stp').textContent = state.stepIdx + 1;
-      if (isFullscreen) {
-        const bar = document.getElementById('fs-step-info');
-        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
-      }
-      const baseDelay = Math.max(120, 1300 - state.speed * 118);
-      state.animTimer = setTimeout(tick, baseDelay);
-    }
-    // ── Multi-array steps (Counting Sort etc.) ──
-    else if (step && step.multiArray) {
-      drawMultiArray(step);
-      document.getElementById('step-text').textContent = step.msg || '';
-      document.getElementById('step-num').textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
-      document.getElementById('stat-stp').textContent = state.stepIdx + 1;
-      if (isFullscreen) {
-        const bar = document.getElementById('fs-step-info');
-        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
-      }
-      const baseDelay = Math.max(100, 1400 - state.speed * 130);
-      state.animTimer = setTimeout(tick, baseDelay);
-    }
-    // ── Graph steps ──
-    else if (['bfs','dfs','dijkstra'].includes(state.algo) && step) {
-      graphState.visited  = step.visited  || [];
-      graphState.queue    = step.queue    || [];
-      graphState.current  = step.current !== undefined ? step.current : -1;
-      graphState.path     = step.path     || [];
-      graphState.mstEdges = step.mstEdges || [];
-      graphState.distMap  = step.distMap  || {};
-      drawGraph();
-      document.getElementById('step-text').textContent = step.msg || '';
-      document.getElementById('step-num').textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
-      if (isFullscreen) {
-        const bar = document.getElementById('fs-step-info');
-        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
-      }
-      const baseDelay = Math.max(50, 950 - state.speed * 90);
-      state.animTimer = setTimeout(tick, baseDelay);
-    }
-    // ── Linked-list animation steps — SMOOTH ANIMATED ──
-    else if (step && step.llStep) {
-      document.getElementById('step-text').textContent = step.msg || '';
-      document.getElementById('step-num').textContent  = `Step ${state.stepIdx+1}/${state.steps.length}`;
-      document.getElementById('stat-stp').textContent  = state.stepIdx + 1;
-      highlightCodeLine(step.codeLine || 0);
-      if (isFullscreen) {
-        const bar = document.getElementById('fs-step-info');
-        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
-      }
-
-      const prevLLIdx = state.stepIdx > 0 ? state.stepIdx - 1 : -1;
-      _animateLLStep(state.stepIdx, prevLLIdx, () => {
-        if (!state.running || state.paused) return;
-        const settle = Math.max(200, 600 - state.speed * 40);
-        state.animTimer = setTimeout(tick, settle);
-      });
-      return; // animation callback schedules next tick
-    }
-    // ── Sorting / searching steps — ANIMATED ──
-    else {
-      // Update stats and info first
-      setStep(state.stepIdx);
-      // Update fullscreen step info
-      if (isFullscreen) {
-        const bar = document.getElementById('fs-step-info');
-        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step?.msg||''}`;
-      }
-
-      // Determine if this step should be animated
-      const isSortSearch = ['bubble','selection','insertion','merge','quick','heap',
-        'counting','radix','linear-search','binary-search','jump-search'].includes(state.algo);
-      const hasAnimation = isSortSearch && step && (
-        (step.swap && step.swap.length >= 2) ||
-        (step.compare && step.compare.length > 0 && step.compare.some(c => c >= 0)) ||
-        (step.found && step.found.length > 0) ||
-        (step.current && step.current.length > 0 && step.current.some(c => c >= 0))
-      );
-
-      if (hasAnimation && state.size <= 40) {
-        // Run smooth animation, then schedule next tick after it completes
-        _animateStep(state.stepIdx, () => {
+      
+      if (typeof _animateMergeTreeStep === 'function') {
+        _animateMergeTreeStep(state.stepIdx, hasPrevMerge ? prevStep : null, () => {
           if (!state.running || state.paused) return;
-          // Longer pause after animation to let the eye settle
-          const settle = Math.max(100, 420 - state.speed * 32);
+          const settle = Math.max(140, 500 - (state.speed || 5) * 36);
           state.animTimer = setTimeout(tick, settle);
         });
-      } else {
-        // No animation — use classic delay
-        const baseDelay = Math.max(50, 950 - state.speed * 90);
-        state.animTimer = setTimeout(tick, baseDelay);
       }
+      return;
+    }
+
+    // Quick Sort
+    if (step && step.quickPartition) {
+      if (typeof drawQuickPartition === 'function') drawQuickPartition(step);
+      const stepText = document.getElementById('step-text');
+      const stepNum = document.getElementById('step-num');
+      const statStp = document.getElementById('stat-stp');
+      
+      if (stepText) stepText.textContent = step.msg || '';
+      if (stepNum) stepNum.textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
+      if (statStp) statStp.textContent = state.stepIdx + 1;
+      
+      if (typeof isFullscreen !== 'undefined' && isFullscreen) {
+        const bar = document.getElementById('fs-step-info');
+        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
+      }
+      const baseDelay = Math.max(120, 1300 - (state.speed || 5) * 118);
+      state.animTimer = setTimeout(tick, baseDelay);
+      return;
+    }
+
+    // Counting Sort
+    if (step && step.multiArray) {
+      if (typeof drawMultiArray === 'function') drawMultiArray(step);
+      const stepText = document.getElementById('step-text');
+      const stepNum = document.getElementById('step-num');
+      const statStp = document.getElementById('stat-stp');
+      
+      if (stepText) stepText.textContent = step.msg || '';
+      if (stepNum) stepNum.textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
+      if (statStp) statStp.textContent = state.stepIdx + 1;
+      
+      if (typeof isFullscreen !== 'undefined' && isFullscreen) {
+        const bar = document.getElementById('fs-step-info');
+        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
+      }
+      const baseDelay = Math.max(100, 1400 - (state.speed || 5) * 130);
+      state.animTimer = setTimeout(tick, baseDelay);
+      return;
+    }
+
+    // Graph Algorithms
+    if (['bfs','dfs','dijkstra'].includes(state.algo) && step) {
+      if (typeof graphState !== 'undefined') {
+        graphState.visited  = step.visited  || [];
+        graphState.queue    = step.queue    || [];
+        graphState.current  = step.current !== undefined ? step.current : -1;
+        graphState.path     = step.path     || [];
+        graphState.mstEdges = step.mstEdges || [];
+        graphState.distMap  = step.distMap  || {};
+      }
+      if (typeof drawGraph === 'function') drawGraph();
+      
+      const stepText = document.getElementById('step-text');
+      const stepNum = document.getElementById('step-num');
+      if (stepText) stepText.textContent = step.msg || '';
+      if (stepNum) stepNum.textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
+      
+      if (typeof isFullscreen !== 'undefined' && isFullscreen) {
+        const bar = document.getElementById('fs-step-info');
+        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
+      }
+      const baseDelay = Math.max(50, 950 - (state.speed || 5) * 90);
+      state.animTimer = setTimeout(tick, baseDelay);
+      return;
+    }
+
+    // Linked List Steps
+    if (step && step.llStep) {
+      const stepText = document.getElementById('step-text');
+      const stepNum = document.getElementById('step-num');
+      const statStp = document.getElementById('stat-stp');
+      
+      if (stepText) stepText.textContent = step.msg || '';
+      if (stepNum) stepNum.textContent  = `Step ${state.stepIdx+1}/${state.steps.length}`;
+      if (statStp) statStp.textContent  = state.stepIdx + 1;
+      if (typeof highlightCodeLine === 'function') highlightCodeLine(step.codeLine || 0);
+      
+      if (typeof isFullscreen !== 'undefined' && isFullscreen) {
+        const bar = document.getElementById('fs-step-info');
+        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.msg||''}`;
+      }
+      const prevLLIdx = state.stepIdx > 0 ? state.stepIdx - 1 : -1;
+      
+      if (typeof _animateLLStep === 'function') {
+        _animateLLStep(state.stepIdx, prevLLIdx, () => {
+          if (!state.running || state.paused) return;
+          const settle = Math.max(200, 600 - (state.speed || 5) * 40);
+          state.animTimer = setTimeout(tick, settle);
+        });
+      }
+      return;
+    }
+
+    // ========== RADIX SORT ==========
+    if (step && step.radixStep) {
+      if (typeof drawRadixStep === 'function') {
+         drawRadixStep(step);
+      }
+      
+      const stepText = document.getElementById('step-text');
+      const stepNum = document.getElementById('step-num');
+      const statStp = document.getElementById('stat-stp');
+      
+      if (stepText) stepText.textContent = step.label || step.msg || '';
+      if (stepNum) stepNum.textContent = `Step ${state.stepIdx+1}/${state.steps.length}`;
+      if (statStp) statStp.textContent = state.stepIdx + 1;
+      
+      if (typeof isFullscreen !== 'undefined' && isFullscreen) {
+        const bar = document.getElementById('fs-step-info');
+        if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step.label || step.msg || ''}`;
+      }
+      // --- FIXED: Using standard speed math so the slider works properly ---
+      const baseDelay = Math.max(50, 950 - (state.speed || 5) * 90);
+      state.animTimer = setTimeout(tick, baseDelay);
+      return;
+    }
+    // =================================
+
+    // Default (bars/cells for sorting & searching)
+    if (typeof setStep === 'function') setStep(state.stepIdx);
+    
+    if (typeof isFullscreen !== 'undefined' && isFullscreen) {
+      const bar = document.getElementById('fs-step-info');
+      if (bar) bar.textContent = `Step ${state.stepIdx+1}/${state.steps.length}  ·  ${step?.msg||''}`;
+    }
+
+    const isSortSearch = ['bubble','selection','insertion','merge','quick','heap',
+      'counting','radix','linear-search','binary-search','jump-search'].includes(state.algo);
+      
+    const hasAnimation = isSortSearch && step && (
+      (step.swap && step.swap.length >= 2) ||
+      (step.compare && step.compare.length > 0 && step.compare.some(c => c >= 0)) ||
+      (step.found && step.found.length > 0) ||
+      (step.current && step.current.length > 0 && step.current.some(c => c >= 0))
+    );
+
+    if (hasAnimation && state.size <= 40) {
+      if (typeof _animateStep === 'function') {
+        _animateStep(state.stepIdx, () => {
+          if (!state.running || state.paused) return;
+          const settle = Math.max(100, 420 - (state.speed || 5) * 32);
+          state.animTimer = setTimeout(tick, settle);
+        });
+      }
+    } else {
+      const baseDelay = Math.max(50, 950 - (state.speed || 5) * 90);
+      state.animTimer = setTimeout(tick, baseDelay);
     }
   }
 
-  // Kick off the first tick
-  const baseDelay0 = Math.max(50, 950 - state.speed * 90);
+  const baseDelay0 = Math.max(50, 950 - (state.speed || 5) * 90);
   const delay = state.algo === 'merge' ? Math.max(80, baseDelay0 * 1.4) : baseDelay0;
   state.animTimer = setTimeout(tick, delay);
 }
@@ -8908,7 +9205,10 @@ function ctrlStepBack() {
 }
 
 function ctrlReset() {
-  if (state.animTimer) clearInterval(state.animTimer);
+  if (state.animTimer) {
+    clearTimeout(state.animTimer);
+    state.animTimer = null;
+  }
   _animReset();
   _mtAnimReset();
   _llAnimReset();
@@ -8918,9 +9218,14 @@ function ctrlReset() {
   state.steps = [];
   state.comparisons = 0;
   state.swaps = 0;
-  document.getElementById('btn-start').disabled = false;
-  document.getElementById('btn-pause').disabled = true;
-  document.getElementById('btn-pause').textContent = '⏸ Pause';
+  
+  const startBtn = document.getElementById('btn-start');
+  const pauseBtn = document.getElementById('btn-pause');
+  if (startBtn) startBtn.disabled = false;
+  if (pauseBtn) {
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = '⏸ Pause';
+  }
   document.getElementById('stat-cmp').textContent = '0';
   document.getElementById('stat-swp').textContent = '0';
   document.getElementById('stat-stp').textContent = '0';
@@ -8930,7 +9235,6 @@ function ctrlReset() {
   const bar = document.getElementById('fs-step-info');
   if (bar) bar.textContent = 'Press Play or Step to begin';
 
-  // Route to correct renderer
   const isSorting   = ['bubble','selection','insertion','merge','quick','heap','counting','radix'].includes(state.algo);
   const isSearching = ['linear-search','binary-search','jump-search'].includes(state.algo);
   if (isSorting || isSearching) {
@@ -8952,7 +9256,229 @@ function ctrlReset() {
     renderCurrentDS();
   }
 }
+// =====================================================
+// STACK ANIMATION ENGINE – SLOW & SMOOTH
+// =====================================================
+const _stackAnim = {
+  active: false,
+  rafId: null,
+  startTime: 0,
+  duration: 800,      // base duration (ms) – will be adjusted by speed
+  type: null,         // 'push', 'pop', 'peek'
+  value: null,
+  oldLength: 0,
+  newLength: 0,
+  onComplete: null,
+  t: 0,
+};
+// =====================================================
+// BST TRAVERSAL ANIMATION ENGINE
+// =====================================================
+// =====================================================
+// BST ANIMATION ENGINE (traversal + insert/delete)
+// =====================================================
+const _bstAnim = {
+  active: false,
+  rafId: null,
+  startTime: 0,
+  duration: 400,
+  steps: [],            // array of step objects: { current, visited, msg, newNode? }
+  stepIdx: 0,
+  onComplete: null,
+  t: 0,
+};
 
+function _bstAnimReset() {
+  if (_bstAnim.rafId) cancelAnimationFrame(_bstAnim.rafId);
+  _bstAnim.active = false;
+  _bstAnim.steps = [];
+  _bstAnim.stepIdx = 0;
+  _bstAnim.onComplete = null;
+  _bstAnim.t = 0;
+}
+
+function _animateBST(steps, callback) {
+  _bstAnimReset();
+  if (!steps.length) { if (callback) callback(); return; }
+  _bstAnim.active = true;
+  _bstAnim.steps = steps;
+  _bstAnim.stepIdx = 0;
+  _bstAnim.onComplete = callback;
+  const speed = state.speed || 5;
+  _bstAnim.duration = Math.max(400, 1200 - speed * 80);
+  _bstAnim.startTime = performance.now();
+
+  function frame(now) {
+    const elapsed = now - _bstAnim.startTime;
+    _bstAnim.t = Math.min(1, elapsed / _bstAnim.duration);
+    const step = _bstAnim.steps[_bstAnim.stepIdx];
+    drawBST(step.current, step.visited, null, true, _bstAnim.t, step.prev);
+    if (_bstAnim.t < 1) {
+      _bstAnim.rafId = requestAnimationFrame(frame);
+    } else {
+      _bstAnim.stepIdx++;
+      if (_bstAnim.stepIdx < _bstAnim.steps.length) {
+        _bstAnim.startTime = performance.now();
+        _bstAnim.rafId = requestAnimationFrame(frame);
+      } else {
+        const cb = _bstAnim.onComplete;
+        _bstAnim.active = false;
+        _bstAnim.onComplete = null;
+        drawBST(); // final redraw without animation
+        if (cb) cb();
+      }
+    }
+    
+  }
+
+  _bstAnim.rafId = requestAnimationFrame(frame);
+}
+
+function genBSTInsertSteps(root, val) {
+  const steps = [];
+  const visited = [];
+  let node = root;
+  let parent = null;
+  let isLeft = false;
+
+  // Traverse to find insertion point
+  while (node) {
+    visited.push(node.val);
+    steps.push({ current: node.val, visited: [...visited], msg: `Comparing ${val} with ${node.val}` });
+    if (val < node.val) {
+      parent = node;
+      node = node.left;
+      isLeft = true;
+    } else if (val > node.val) {
+      parent = node;
+      node = node.right;
+      isLeft = false;
+    } else {
+      // value already exists
+      steps.push({ current: null, visited: [...visited], msg: `Value ${val} already exists. No insertion.` });
+      return steps;
+    }
+  }
+
+  // Insertion point found
+  const newNode = { val, left: null, right: null };
+  if (!parent) {
+    // new root
+    steps.push({ current: null, visited: [...visited], msg: `Insert ${val} as new root`, newNode: val });
+  } else {
+    steps.push({ current: parent.val, visited: [...visited], msg: `Insert ${val} as ${isLeft ? 'left' : 'right'} child of ${parent.val}`, newNode: val });
+  }
+  return steps;
+}
+function genBSTDeleteSteps(root, val) {
+  const steps = [];
+  const path = [];
+  let node = root;
+  let parent = null;
+  let isLeft = false;
+
+  // First, find the node
+  while (node && node.val !== val) {
+    path.push(node.val);
+    steps.push({ current: node.val, visited: [...path], msg: `Comparing ${node.val} with target ${val}` });
+    if (val < node.val) {
+      parent = node;
+      node = node.left;
+      isLeft = true;
+    } else {
+      parent = node;
+      node = node.right;
+      isLeft = false;
+    }
+  }
+
+  if (!node) {
+    // Not found
+    steps.push({ current: null, visited: path, msg: `❌ Value ${val} not found in tree`, found: false });
+    return { steps, found: false };
+  }
+
+  // Found it
+  path.push(node.val);
+  steps.push({ current: node.val, visited: [...path], msg: `Found node ${node.val} to delete` });
+
+  // Determine case and simulate deletion steps
+  if (!node.left && !node.right) {
+    steps.push({ current: node.val, visited: [...path], msg: `Node ${node.val} has no children, removing it` });
+  } else if (!node.left || !node.right) {
+    const child = node.left || node.right;
+    steps.push({ current: child.val, visited: [...path], msg: `Node ${node.val} has one child (${child.val}), replacing with child` });
+  } else {
+    // Find inorder successor
+    let succParent = node;
+    let succ = node.right;
+    while (succ.left) {
+      succParent = succ;
+      succ = succ.left;
+    }
+    steps.push({ current: succ.val, visited: [...path], msg: `Node ${node.val} has two children, finding inorder successor ${succ.val}` });
+    steps.push({ current: succ.val, visited: [...path], msg: `Copy successor value ${succ.val} to node ${node.val}` });
+    steps.push({ current: succ.val, visited: [...path], msg: `Now delete the successor node ${succ.val}` });
+  }
+
+  steps.push({ current: node.val, visited: [...path], msg: `✅ Deleted ${val} from tree`, found: true });
+  return { steps, found: true };
+}
+
+function _stackAnimReset() {
+  if (_stackAnim.rafId) cancelAnimationFrame(_stackAnim.rafId);
+  _stackAnim.active = false;
+  _stackAnim.rafId = null;
+  _stackAnim.type = null;
+  _stackAnim.value = null;
+  _stackAnim.oldLength = 0;
+  _stackAnim.newLength = 0;
+  _stackAnim.onComplete = null;
+  _stackAnim.t = 0;
+}
+
+function _animateStack(type, value, oldLen, newLen, callback) {
+  _stackAnimReset();
+  _stackAnim.active = true;
+  _stackAnim.type = type;
+  _stackAnim.value = value;
+  _stackAnim.oldLength = oldLen;
+  _stackAnim.newLength = newLen;
+  _stackAnim.onComplete = callback;
+
+  // Slower: min 800 ms, up to 2200 ms when speed is 1
+  const speed = state.speed || 5;
+  _stackAnim.duration = Math.max(800, 2200 - speed * 140);
+  _stackAnim.startTime = performance.now();
+
+  function frame(now) {
+    const elapsed = now - _stackAnim.startTime;
+    _stackAnim.t = Math.min(1, elapsed / _stackAnim.duration);
+    drawStack(true);
+    if (_stackAnim.t < 1) {
+      _stackAnim.rafId = requestAnimationFrame(frame);
+    } else {
+      const cb = _stackAnim.onComplete;
+      _stackAnim.active = false;
+      _stackAnim.onComplete = null;
+      drawStack();
+      if (cb) cb();
+    }
+  }
+  _stackAnim.rafId = requestAnimationFrame(frame);
+}
+
+// Easing with bounce at the end (for push/pop)
+function easeOutBounce(t) {
+  if (t < 1 / 2.75) return 7.5625 * t * t;
+  if (t < 2 / 2.75) return 7.5625 * (t - 1.5 / 2.75) * (t - 1.5 / 2.75) + 0.75;
+  if (t < 2.5 / 2.75) return 7.5625 * (t - 2.25 / 2.75) * (t - 2.25 / 2.75) + 0.9375;
+  return 7.5625 * (t - 2.625 / 2.75) * (t - 2.625 / 2.75) + 0.984375;
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
 // =====================================================
 // QUIZ MODE
 // =====================================================
@@ -8987,36 +9513,52 @@ const quizQuestions = [
   { q: "What is the primary disadvantage of linked lists compared to arrays?", opts: ["Wasted memory for pointers", "Slower access time", "Both A and B", "None"], ans: 2 },
 ];
 
-let quizIdx = 0, quizScore = 0, currentQuizSet = [];
+// --- QUIZ MODE (working version) ---
+const defaultQuestions = [
+  { q: "What is the time complexity of Bubble Sort in the worst case?", opts: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], ans: 2 },
+  { q: "Which sorting algorithm has O(1) space complexity?", opts: ["Merge Sort", "Quick Sort", "Counting Sort", "Heap Sort"], ans: 3 },
+  { q: "Binary Search requires the array to be:", opts: ["Sorted", "Unsorted", "Partially sorted", "Random"], ans: 0 },
+  // add more if you like
+];
+
+let quizIdx = 0, quizScore = 0, quizQuestionsList = [];
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 function openQuiz() {
-  const count = 5; // number of questions per quiz – change if you like
-  // Shuffle the entire question bank
-  const shuffled = [...quizQuestions];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  currentQuizSet = shuffled.slice(0, count);
+  if (!quizQuestions.length) return;
+  quizQuestionsList = shuffleArray([...quizQuestions]);
   quizIdx = 0;
   quizScore = 0;
-  document.getElementById('quiz-overlay').style.display = 'flex'; // or use classList.add('active') if you use a CSS rule
+  document.getElementById('quiz-overlay').classList.add('active');
   renderQuiz();
   document.getElementById('sidebar').classList.remove('open');
 }
 
 function renderQuiz() {
-  const q = currentQuizSet[quizIdx];
+  const q = quizQuestionsList[quizIdx];
+  if (!q) return;
   document.getElementById('quiz-q').textContent = q.q;
   document.getElementById('quiz-fb').textContent = '';
   const optsEl = document.getElementById('quiz-opts');
   optsEl.innerHTML = q.opts.map((opt, i) =>
     `<div class="quiz-opt" onclick="answerQuiz(${i})">${opt}</div>`
   ).join('');
+  // Disable Next until answered
+  const nextBtn = document.querySelector('#quiz-card .btn.primary');
+  if (nextBtn) nextBtn.disabled = true;
+  // Enable answer options
+  document.querySelectorAll('.quiz-opt').forEach(opt => opt.style.pointerEvents = 'auto');
 }
 
 function answerQuiz(i) {
-  const q = currentQuizSet[quizIdx];
+  const q = quizQuestionsList[quizIdx];
   const opts = document.querySelectorAll('.quiz-opt');
   opts.forEach(o => o.style.pointerEvents = 'none');
   opts[i].classList.add(i === q.ans ? 'correct' : 'wrong');
@@ -9028,20 +9570,25 @@ function answerQuiz(i) {
   } else {
     fb.textContent = `❌ Wrong. Correct answer: "${q.opts[q.ans]}"`;
   }
+  // Enable Next button
+  const nextBtn = document.querySelector('#quiz-card .btn.primary');
+  if (nextBtn) nextBtn.disabled = false;
 }
 
 function nextQuiz() {
-  if (quizIdx + 1 < currentQuizSet.length) {
+  if (quizIdx + 1 < quizQuestionsList.length) {
     quizIdx++;
-    renderQuiz();
   } else {
-    document.getElementById('quiz-fb').textContent = `Quiz finished! You scored ${quizScore}/${currentQuizSet.length}`;
+    // Reshuffle and restart
+    quizQuestionsList = shuffleArray([...quizQuestions]);
+    quizIdx = 0;
+    quizScore = 0;
   }
+  renderQuiz();
 }
 
 function closeQuiz() {
-  document.getElementById('quiz-overlay').style.display = 'none';
-  // or classList.remove('active') if you use class
+  document.getElementById('quiz-overlay').classList.remove('active');
 }
 function adjustControlPanelForDS(isDSMode) {
   const controlsGroup = document.getElementById('ctrl-group-controls');
@@ -9083,6 +9630,123 @@ function adjustControlPanelForDS(isDSMode) {
 // =====================================================
 // INIT
 // =====================================================
+// ===== Linked List UI helpers (main panel) =====
+function showInsertMenu() {
+  const insertMenu = document.getElementById('ll-insert-menu');
+  const deleteMenu = document.getElementById('ll-delete-menu');
+  const posDiv = document.getElementById('ll-insert-position');
+  if (insertMenu) insertMenu.style.display = 'block';
+  if (deleteMenu) deleteMenu.style.display = 'none';
+  if (posDiv) posDiv.style.display = 'none';
+  const valInput = document.getElementById('ll-insert-val');
+  if (valInput) valInput.value = '';
+}
+function showDeleteMenu() {
+  const deleteMenu = document.getElementById('ll-delete-menu');
+  const insertMenu = document.getElementById('ll-insert-menu');
+  const deleteValueDiv = document.getElementById('ll-delete-value');
+  if (deleteMenu) deleteMenu.style.display = 'block';
+  if (insertMenu) insertMenu.style.display = 'none';
+  if (deleteValueDiv) deleteValueDiv.style.display = 'none';
+  const deleteValInput = document.getElementById('ll-delete-val');
+  if (deleteValInput) deleteValInput.value = '';
+}
+function showInsertPosition() {
+  const posDiv = document.getElementById('ll-insert-position');
+  if (posDiv) posDiv.style.display = 'block';
+}
+function showDeleteValue() {
+  const delValDiv = document.getElementById('ll-delete-value');
+  if (delValDiv) delValDiv.style.display = 'block';
+}
+function llInsertHead() {
+  const valInput = document.getElementById('ll-insert-val');
+  if (!valInput) { console.error('ll-insert-val not found'); return; }
+  const val = valInput.value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  // Call the animation engine
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertBegin', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llInsertTail() {
+  const valInput = document.getElementById('ll-insert-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertEnd', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llInsertPos() {
+  const valInput = document.getElementById('ll-insert-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  const idxInput = document.getElementById('ll-insert-idx');
+  if (!idxInput) return;
+  const idx = parseInt(idxInput.value);
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (isNaN(idx)) { showErrorToast('Invalid index.'); return; }
+  const list = dsState.linkedList;
+  if (idx < 0 || idx > list.length) {
+    showErrorToast(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    return;
+  }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertPos', val, idx);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llDeleteHead() {
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteBegin');
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llDeleteTail() {
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteEnd');
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llDeleteByValue() {
+  const valInput = document.getElementById('ll-delete-val');
+  if (!valInput) return;
+  const val = valInput.value;
+  if (!val) { showErrorToast('Please enter a value to delete.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteByVal', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 loadAlgo('bubble');
@@ -9103,11 +9767,256 @@ document.getElementById('sec-sorting').classList.add('open');
 /* Toast notification */
 /* Toast notification */
 /* Toast notification */
+function showErrorToast(message) {
+  const toast = document.getElementById('toast-message');
+  if (!toast) return;
+  toast.textContent = message;
+  if (toastTimer) clearTimeout(toastTimer);
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+    toast.textContent = 'Invalid index !';
+  }, 2000);
+}
+// ===== FIXED LINKED LIST UI FUNCTIONS =====
+// Ensure the value input is used directly
+function llInsertHead() {
+  const val = document.getElementById('ll-insert-val').value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  // Call the animation engine
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertBegin', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llInsertTail() {
+  const val = document.getElementById('ll-insert-val').value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertEnd', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llInsertPos() {
+  const val = document.getElementById('ll-insert-val').value;
+  const idx = parseInt(document.getElementById('ll-insert-idx').value);
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (isNaN(idx)) { showErrorToast('Invalid index.'); return; }
+  const list = dsState.linkedList;
+  if (idx < 0 || idx > list.length) {
+    showErrorToast(`Invalid position: ${idx}. Valid range: 0 to ${list.length}`);
+    return;
+  }
+  if (typeof llAnimate === 'function') {
+    llAnimate('insertPos', val, idx);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+function llDeleteByValue() {
+  const val = document.getElementById('ll-delete-val').value;
+  if (!val) { showErrorToast('Please enter a value to delete.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: please enter a number.'); return; }
+  if (typeof llAnimate === 'function') {
+    llAnimate('deleteByVal', val);
+  } else {
+    console.error('llAnimate is not defined');
+    setStepMsg('Error: animation engine missing.');
+  }
+  updateComplexity();
+}
+// Fullscreen HUD functions for BST
+function fsBSTInsert() {
+  const val = document.getElementById('fs-bst-val')?.value;
+  if (!val) { showErrorToast('Please enter a value.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: only numbers are allowed.'); return; }
+  // Sync to main input
+  const mainVal = document.getElementById('ds-val');
+  if (mainVal) mainVal.value = val;
+  dsBSTInsert();
+}
 
+function fsBSTSearch() {
+  const val = document.getElementById('fs-bst-val')?.value;
+  if (!val) { showErrorToast('Please enter a value to search.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: only numbers are allowed.'); return; }
+  const mainVal = document.getElementById('ds-val');
+  if (mainVal) mainVal.value = val;
+  dsBSTSearch();
+}
 
-</script>
-<!-- Toast notification for invalid input -->
-<div id="toast-message" class="toast">Invalid index !</div>
-</body>
-</body>
-</html>
+function fsBSTDelete() {
+  const val = document.getElementById('fs-bst-val')?.value;
+  if (!val) { showErrorToast('Please enter a value to delete.'); return; }
+  const num = Number(val);
+  if (isNaN(num)) { showErrorToast('Invalid input: only numbers are allowed.'); return; }
+  const mainVal = document.getElementById('ds-val');
+  if (mainVal) mainVal.value = val;
+  dsBSTDelete();
+}
+const dur = {
+  traverse: Math.max(500, 1200 - speed * 68),
+  found:    Math.max(600, 1400 - speed * 80),
+  rewire:   Math.max(800, 1800 - speed * 100),
+  insert:   Math.max(1200, 3000 - speed * 110),
+  delete:   Math.max(800, 1800 - speed * 100),
+  done:     Math.max(400, 1000 - speed * 60),
+}[phase] || Math.max(500, 1000 - speed * 50);
+// Helper to force slider reflow
+function adjustSizeSlider() {
+  const slider = document.getElementById('size-range');
+  if (!slider) return;
+  slider.style.display = 'none';
+  slider.offsetHeight; // force reflow
+  slider.style.display = '';
+}
+
+// In loadAlgo, add after the existing slider adjustments
+// For example, after the if (name === 'merge') block, add:
+if (name === 'merge') {
+  // ... existing code ...
+  adjustSizeSlider();
+} else if (name === 'bst' || name === 'avl' || name === 'heap-tree' || name === 'binary-tree') {
+  // ... existing code ...
+  adjustSizeSlider();
+} else {
+  // For all other algorithms, ensure max is 20
+  const sizeRange = document.getElementById('size-range');
+  if (sizeRange && sizeRange.max !== '20') {
+    sizeRange.max = '20';
+    adjustSizeSlider();
+  }
+}
+
+// Also in updateSize, after setting the sizeRange.value and max, add:
+adjustSizeSlider();
+// Fixes the purple fill on the slider to dynamically adapt whether max is 20 or 100
+function updateSliderBackground() {
+  const slider = document.getElementById('size-range');
+  if (!slider) return;
+  const min = slider.min ? Number(slider.min) : 0;
+  const max = slider.max ? Number(slider.max) : 100;
+  const val = slider.value ? Number(slider.value) : 20;
+  
+  const percentage = ((val - min) / (max - min)) * 100;
+  slider.style.background = `linear-gradient(to right, #6c63ff ${percentage}%, #2a2a42 ${percentage}%)`;
+}
+
+// Attach it to the input event so it fires smoothly while dragging
+const sizeRangeEl = document.getElementById('size-range');
+if (sizeRangeEl) {
+  sizeRangeEl.addEventListener('input', updateSliderBackground);
+}
+function drawRadixStep(step) {
+  const panel = document.getElementById('viz-panel');
+  canvas.width = panel.clientWidth;
+  canvas.height = panel.clientHeight;
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const isLight = document.body.classList.contains('light');
+  ctx.fillStyle = isLight ? '#f0f0f8' : '#0a0a14';
+  ctx.fillRect(0, 0, W, H);
+
+  const items = step.arr || [];
+  const buckets = step.buckets || Array.from({ length: 10 }, () => []);
+
+  // Draw the main array boxes at the top
+  const len = items.length;
+  const gap = 6;
+  const maxBoxW = 46;
+  const boxSize = Math.min(maxBoxW, (W - 60 - len * gap) / len);
+  const startX = Math.max(20, (W - len * (boxSize + gap)) / 2);
+  const mainY = 60;
+
+  for (let i = 0; i < len; i++) {
+    const val = items[i];
+    const x = startX + i * (boxSize + gap);
+    const y = mainY;
+    ctx.fillStyle = isLight ? '#e0e0e8' : '#1a1a26';
+    ctx.fillRect(x, y, boxSize, boxSize);
+    if (val !== null && val !== undefined) {
+      let bg = '#22223a';
+      if (step.comp && step.comp.includes(i)) bg = '#ff6584';
+      else if (step.swap && step.swap.includes(i)) bg = '#43d9ad';
+      else if (step.sorted && step.sorted.includes(i)) bg = '#6c63ff';
+      ctx.fillStyle = bg;
+      ctx.fillRect(x, y, boxSize, boxSize);
+      ctx.strokeStyle = '#4444aa';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, boxSize, boxSize);
+      if (boxSize > 15) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(9, boxSize * 0.4)}px JetBrains Mono`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(val, x + boxSize / 2, y + boxSize / 2);
+      }
+    }
+  }
+
+  // Draw 10 buckets at the bottom
+  const bucketW = Math.min(56, (W - 60) / 10 - 10);
+  const bucketStartX = Math.max(20, (W - 10 * (bucketW + 10)) / 2);
+  const bucketBottomY = H - 30;
+  const bucketH = Math.min(150, H - mainY - boxSize - 60);
+  const safeBucketH = Math.max(20, bucketH);
+
+  for (let b = 0; b < 10; b++) {
+    const x = bucketStartX + b * (bucketW + 10);
+    const bucketItems = buckets[b] || [];
+    ctx.fillStyle = '#ffd166';
+    ctx.font = 'bold 15px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(`[${b}]`, x + bucketW / 2, bucketBottomY + 20);
+    ctx.beginPath();
+    ctx.moveTo(x, bucketBottomY - safeBucketH);
+    ctx.lineTo(x, bucketBottomY);
+    ctx.lineTo(x + bucketW, bucketBottomY);
+    ctx.lineTo(x + bucketW, bucketBottomY - safeBucketH);
+    ctx.strokeStyle = isLight ? '#8888aa' : '#6c63ff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Draw elements inside the bucket (stacked from bottom)
+    for (let j = 0; j < bucketItems.length; j++) {
+      const val = bucketItems[j];
+      const itemH = Math.min(26, safeBucketH / Math.max(1, bucketItems.length));
+      const ix = x + 4;
+      const iw = bucketW - 8;
+      const iy = bucketBottomY - (j + 1) * itemH - 2;
+      ctx.fillStyle = '#43d9ad';
+      ctx.fillRect(ix, iy, iw, itemH);
+      if (itemH >= 10) {
+        ctx.fillStyle = '#0a0a14';
+        ctx.font = `bold ${Math.max(9, itemH * 0.55)}px JetBrains Mono`;
+        ctx.fillText(val, ix + iw / 2, iy + itemH / 2);
+      }
+    }
+  }
+
+  // Draw label if present
+  if (step.label) {
+    ctx.fillStyle = '#ffd166';
+    ctx.font = 'bold 16px JetBrains Mono';
+    ctx.fillText(step.label, W / 2, 30);
+  }
+}
